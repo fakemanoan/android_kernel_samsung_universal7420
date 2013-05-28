@@ -2056,7 +2056,7 @@ TRACE_EVENT(ext4_ext_show_extent,
 TRACE_EVENT(ext4_remove_blocks,
 	    TP_PROTO(struct inode *inode, struct ext4_extent *ex,
 		ext4_lblk_t from, ext4_fsblk_t to,
-		ext4_fsblk_t partial_cluster),
+		long long partial_cluster),
 
 	TP_ARGS(inode, ex, from, to, partial_cluster),
 
@@ -2065,7 +2065,7 @@ TRACE_EVENT(ext4_remove_blocks,
 		__field(	ino_t,		ino	)
 		__field(	ext4_lblk_t,	from	)
 		__field(	ext4_lblk_t,	to	)
-		__field(	ext4_fsblk_t,	partial	)
+		__field(	long long,	partial	)
 		__field(	ext4_fsblk_t,	ee_pblk	)
 		__field(	ext4_lblk_t,	ee_lblk	)
 		__field(	unsigned short,	ee_len	)
@@ -2083,7 +2083,7 @@ TRACE_EVENT(ext4_remove_blocks,
 	),
 
 	TP_printk("dev %d,%d ino %lu extent [%u(%llu), %u]"
-		  "from %u to %u partial_cluster %u",
+		  "from %u to %u partial_cluster %lld",
 		  MAJOR(__entry->dev), MINOR(__entry->dev),
 		  (unsigned long) __entry->ino,
 		  (unsigned) __entry->ee_lblk,
@@ -2091,19 +2091,20 @@ TRACE_EVENT(ext4_remove_blocks,
 		  (unsigned short) __entry->ee_len,
 		  (unsigned) __entry->from,
 		  (unsigned) __entry->to,
-		  (unsigned) __entry->partial)
+		  (long long) __entry->partial)
 );
 
 TRACE_EVENT(ext4_ext_rm_leaf,
 	TP_PROTO(struct inode *inode, ext4_lblk_t start,
-		 struct ext4_extent *ex, ext4_fsblk_t partial_cluster),
+		 struct ext4_extent *ex,
+		 long long partial_cluster),
 
 	TP_ARGS(inode, start, ex, partial_cluster),
 
 	TP_STRUCT__entry(
 		__field(	dev_t,		dev	)
 		__field(	ino_t,		ino	)
-		__field(	ext4_fsblk_t,	partial	)
+		__field(	long long,	partial	)
 		__field(	ext4_lblk_t,	start	)
 		__field(	ext4_lblk_t,	ee_lblk	)
 		__field(	ext4_fsblk_t,	ee_pblk	)
@@ -2121,14 +2122,14 @@ TRACE_EVENT(ext4_ext_rm_leaf,
 	),
 
 	TP_printk("dev %d,%d ino %lu start_lblk %u last_extent [%u(%llu), %u]"
-		  "partial_cluster %u",
+		  "partial_cluster %lld",
 		  MAJOR(__entry->dev), MINOR(__entry->dev),
 		  (unsigned long) __entry->ino,
 		  (unsigned) __entry->start,
 		  (unsigned) __entry->ee_lblk,
 		  (unsigned long long) __entry->ee_pblk,
 		  (unsigned short) __entry->ee_len,
-		  (unsigned) __entry->partial)
+		  (long long) __entry->partial)
 );
 
 TRACE_EVENT(ext4_ext_rm_idx,
@@ -2186,7 +2187,7 @@ TRACE_EVENT(ext4_ext_remove_space,
 
 TRACE_EVENT(ext4_ext_remove_space_done,
 	TP_PROTO(struct inode *inode, ext4_lblk_t start, ext4_lblk_t end,
-		 int depth, ext4_lblk_t partial, __le16 eh_entries),
+		 int depth, long long partial, __le16 eh_entries),
 
 	TP_ARGS(inode, start, end, depth, partial, eh_entries),
 
@@ -2196,7 +2197,7 @@ TRACE_EVENT(ext4_ext_remove_space_done,
 		__field(	ext4_lblk_t,	start		)
 		__field(	ext4_lblk_t,	end		)
 		__field(	int,		depth		)
-		__field(	ext4_lblk_t,	partial		)
+		__field(	long long,	partial		)
 		__field(	unsigned short,	eh_entries	)
 	),
 
@@ -2210,14 +2211,14 @@ TRACE_EVENT(ext4_ext_remove_space_done,
 		__entry->eh_entries	= le16_to_cpu(eh_entries);
 	),
 
-	TP_printk("dev %d,%d ino %lu since %u end %u depth %d partial %u "
+	TP_printk("dev %d,%d ino %lu since %u end %u depth %d partial %lld "
 		  "remaining_entries %u",
 		  MAJOR(__entry->dev), MINOR(__entry->dev),
 		  (unsigned long) __entry->ino,
 		  (unsigned) __entry->start,
 		  (unsigned) __entry->end,
 		  __entry->depth,
-		  (unsigned) __entry->partial,
+		  (long long) __entry->partial,
 		  (unsigned short) __entry->eh_entries)
 );
 
