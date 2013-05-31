@@ -48,12 +48,13 @@ extern int			ip6_datagram_send_ctl(struct net *net,
 						      struct ipv6_txoptions *opt,
 						      int *hlimit, int *tclass,
 						      int *dontfrag);
-							  
+
 extern void		ip6_dgram_sock_seq_show(struct seq_file *seq,
 						struct sock *sp,
 						__u16 srcp,
 						__u16 destp,
 						int bucket);
+
 #define		LOOPBACK4_IPV6		cpu_to_be32(0x7f000006)
 
 /*
