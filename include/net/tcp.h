@@ -1303,20 +1303,6 @@ static inline void tcp_openreq_init(struct request_sock *req,
 #endif
 }
 
-#ifdef CONFIG_MPTCP
-extern void tcp_openreq_init_rwin(struct request_sock *req,
-				  struct sock *sk, struct dst_entry *dst);
-#endif
-
-/* Compute time elapsed between SYNACK and the ACK completing 3WHS */
-static inline void tcp_synack_rtt_meas(struct sock *sk,
-				       struct request_sock *req)
-{
-	if (tcp_rsk(req)->snt_synack)
-		tcp_valid_rtt_meas(sk,
-		    tcp_time_stamp - tcp_rsk(req)->snt_synack);
-}
-
 extern void tcp_enter_memory_pressure(struct sock *sk);
 
 static inline int keepalive_intvl_when(const struct tcp_sock *tp)
