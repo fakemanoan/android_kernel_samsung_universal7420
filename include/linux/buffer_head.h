@@ -40,6 +40,7 @@ enum bh_state_bits {
 	BH_Journal, /* Buffer contains journal data */
 	BH_Jmeta,   /* Buffer contains metadata */
 #endif
+	BH_Defer_Completion, /* Defer AIO completion to workqueue */
 
 	BH_PrivateStart,/* not a state bit, but the first bit available
 			 * for private allocation by other entities
@@ -136,6 +137,7 @@ BUFFER_FNS(Prio, prio)
 BUFFER_FNS(Journal, journal)
 BUFFER_FNS(Jmeta, jmeta)
 #endif
+BUFFER_FNS(Defer_Completion, defer_completion)
 
 #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
 
