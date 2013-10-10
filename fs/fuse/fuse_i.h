@@ -492,6 +492,9 @@ struct fuse_conn {
 	/** Shortcircuited IO. */
 	unsigned shortcircuit_io:1;
 
+	/** write-back cache policy (default is write-through) */
+	unsigned writeback_cache:1;
+
 	/*
 	 * The following bitfields are only for optimization purposes
 	 * and hence races in setting them will not cause malfunction
