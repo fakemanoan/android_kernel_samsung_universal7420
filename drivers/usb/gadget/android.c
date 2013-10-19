@@ -2406,13 +2406,13 @@ static int __init init(void)
 	if (err) {
 		printk(KERN_ERR "usb: %s To create terminal_atttrr is failed\n",
 				__func__);
-		return err;
+		goto err_probe;
 	}
 #endif
 	err = usb_composite_probe(&android_usb_driver);
 	if (err) {
 		pr_err("%s: failed to probe driver %d", __func__, err);
-		goto err_create;
+		goto err_probe;
 	}
 
 	/* HACK: exchange composite's setup with ours */
@@ -2421,6 +2421,8 @@ static int __init init(void)
 
 	return 0;
 
+err_probe:
+	device_destroy(android_class, dev->dev->devt);
 err_create:
 	kfree(dev);
 err_dev:
