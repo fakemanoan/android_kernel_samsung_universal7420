@@ -2966,7 +2966,7 @@ sctp_disposition_t sctp_sf_eat_data_6_2(struct net *net,
 		return sctp_sf_violation_chunklen(net, ep, asoc, type, arg,
 						  commands);
 
-	error = sctp_eat_data(asoc, chunk, commands );
+	error = sctp_eat_data(asoc, chunk, commands);
 	switch (error) {
 	case SCTP_IERROR_NO_ERROR:
 		break;
@@ -3087,7 +3087,7 @@ sctp_disposition_t sctp_sf_eat_data_fast_4_4(struct net *net,
 		return sctp_sf_violation_chunklen(net, ep, asoc, type, arg,
 						  commands);
 
-	error = sctp_eat_data(asoc, chunk, commands );
+	error = sctp_eat_data(asoc, chunk, commands);
 	switch (error) {
 	case SCTP_IERROR_NO_ERROR:
 	case SCTP_IERROR_HIGH_TSN:
@@ -3777,7 +3777,7 @@ sctp_disposition_t sctp_sf_do_asconf_ack(struct net *net,
 		 */
 		sctp_add_cmd_sf(commands, SCTP_CMD_TIMER_STOP,
 				SCTP_TO(SCTP_EVENT_TIMEOUT_T4_RTO));
-		sctp_add_cmd_sf(commands, SCTP_CMD_DISCARD_PACKET,SCTP_NULL());
+		sctp_add_cmd_sf(commands, SCTP_CMD_DISCARD_PACKET, SCTP_NULL());
 		sctp_add_cmd_sf(commands, SCTP_CMD_SET_SK_ERR,
 				SCTP_ERROR(ECONNABORTED));
 		sctp_add_cmd_sf(commands, SCTP_CMD_ASSOC_FAILED,
@@ -3811,7 +3811,7 @@ sctp_disposition_t sctp_sf_do_asconf_ack(struct net *net,
 		/* We are going to ABORT, so we might as well stop
 		 * processing the rest of the chunks in the packet.
 		 */
-		sctp_add_cmd_sf(commands, SCTP_CMD_DISCARD_PACKET,SCTP_NULL());
+		sctp_add_cmd_sf(commands, SCTP_CMD_DISCARD_PACKET, SCTP_NULL());
 		sctp_add_cmd_sf(commands, SCTP_CMD_SET_SK_ERR,
 				SCTP_ERROR(ECONNABORTED));
 		sctp_add_cmd_sf(commands, SCTP_CMD_ASSOC_FAILED,
@@ -4462,7 +4462,7 @@ static sctp_disposition_t sctp_sf_violation_chunklen(
 				     void *arg,
 				     sctp_cmd_seq_t *commands)
 {
-	static const char err_str[]="The following chunk had invalid length:";
+	static const char err_str[] = "The following chunk had invalid length:";
 
 	return sctp_sf_abort_violation(net, ep, asoc, arg, commands, err_str,
 					sizeof(err_str));
@@ -4525,7 +4525,7 @@ static sctp_disposition_t sctp_sf_violation_ctsn(
 				     void *arg,
 				     sctp_cmd_seq_t *commands)
 {
-	static const char err_str[]="The cumulative tsn ack beyond the max tsn currently sent:";
+	static const char err_str[] = "The cumulative tsn ack beyond the max tsn currently sent:";
 
 	return sctp_sf_abort_violation(net, ep, asoc, arg, commands, err_str,
 					sizeof(err_str));
@@ -4545,7 +4545,7 @@ static sctp_disposition_t sctp_sf_violation_chunk(
 				     void *arg,
 				     sctp_cmd_seq_t *commands)
 {
-	static const char err_str[]="The following chunk violates protocol:";
+	static const char err_str[] = "The following chunk violates protocol:";
 
 	if (!asoc)
 		return sctp_sf_violation(net, ep, asoc, type, arg, commands);
@@ -6003,7 +6003,7 @@ static struct sctp_packet *sctp_ootb_pkt_new(struct net *net,
 		/* Special case the INIT-ACK as there is no peer's vtag
 		 * yet.
 		 */
-		switch(chunk->chunk_hdr->type) {
+		switch (chunk->chunk_hdr->type) {
 		case SCTP_CID_INIT_ACK:
 		{
 			sctp_initack_chunk_t *initack;
@@ -6020,7 +6020,7 @@ static struct sctp_packet *sctp_ootb_pkt_new(struct net *net,
 		/* Special case the INIT and stale COOKIE_ECHO as there is no
 		 * vtag yet.
 		 */
-		switch(chunk->chunk_hdr->type) {
+		switch (chunk->chunk_hdr->type) {
 		case SCTP_CID_INIT:
 		{
 			sctp_init_chunk_t *init;
@@ -6233,7 +6233,7 @@ static int sctp_eat_data(const struct sctp_association *asoc,
 		/* We are going to ABORT, so we might as well stop
 		 * processing the rest of the chunks in the packet.
 		 */
-		sctp_add_cmd_sf(commands, SCTP_CMD_DISCARD_PACKET,SCTP_NULL());
+		sctp_add_cmd_sf(commands, SCTP_CMD_DISCARD_PACKET, SCTP_NULL());
 		sctp_add_cmd_sf(commands, SCTP_CMD_SET_SK_ERR,
 				SCTP_ERROR(ECONNABORTED));
 		sctp_add_cmd_sf(commands, SCTP_CMD_ASSOC_FAILED,
