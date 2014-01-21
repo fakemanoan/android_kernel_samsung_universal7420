@@ -947,8 +947,6 @@ static bool audit_tree_send_event(struct fsnotify_group *group, struct inode *in
 static const struct fsnotify_ops audit_tree_ops = {
 	.handle_event = audit_tree_handle_event,
 	.should_send_event = audit_tree_send_event,
-	.free_group_priv = NULL,
-	.free_event = NULL,
 	.freeing_mark = audit_tree_freeing_mark,
 };
 
