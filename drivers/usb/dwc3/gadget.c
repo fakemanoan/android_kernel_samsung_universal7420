@@ -216,9 +216,6 @@ int dwc3_gadget_resize_tx_fifos(struct dwc3 *dwc)
 		int		mult = 1;
 		int		tmp;
 
-		if (!(dep->number & 1))
-			continue;
-
 		if (!(dep->flags & DWC3_EP_ENABLED))
 			continue;
 
