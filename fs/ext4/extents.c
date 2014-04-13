@@ -3331,6 +3331,11 @@ static int ext4_split_extent(handle_t *handle,
 		return PTR_ERR(path);
 	depth = ext_depth(inode);
 	ex = path[depth].p_ext;
+	if (!ex) {
+		EXT4_ERROR_INODE(inode, "unexpected hole at %lu",
+				 (unsigned long) map->m_lblk);
+		return -EIO;
+	}
 	uninitialized = ext4_ext_is_uninitialized(ex);
 	split_flag1 = 0;
 
@@ -3712,6 +3717,12 @@ static int ext4_convert_initialized_extents(handle_t *handle,
 		}
 		depth = ext_depth(inode);
 		ex = path[depth].p_ext;
+		if (!ex) {
+			EXT4_ERROR_INODE(inode, "unexpected hole at %lu",
+					 (unsigned long) map->m_lblk);
+			err = -EIO;
+			goto out;
+		}
 	}
 
 	err = ext4_ext_get_access(handle, inode, path + depth);
@@ -5365,6 +5376,12 @@ ext4_ext_shift_extents(struct inode *inode, handle_t *handle,
 			return PTR_ERR(path);
 		depth = path->p_depth;
 		extent = path[depth].p_ext;
+		if (!extent) {
+			EXT4_ERROR_INODE(inode, "unexpected hole at %lu",
+					 (unsigned long) start);
+			return -EIO;
+		}
+
 		current_block = le32_to_cpu(extent->ee_block);
 		if (start > current_block) {
 			/* Hole, move to the next extent */
