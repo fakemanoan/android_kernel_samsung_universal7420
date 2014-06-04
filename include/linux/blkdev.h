@@ -1543,6 +1543,9 @@ extern int bdev_read_page(struct block_device *, sector_t, struct page *);
 extern int bdev_write_page(struct block_device *, sector_t, struct page *,
 						struct writeback_control *);
 #else /* CONFIG_BLOCK */
+
+struct block_device;
+
 /*
  * stubs for when the block layer is configured out
  */
@@ -1576,6 +1579,12 @@ static inline void blk_schedule_flush_plug(struct task_struct *task)
 static inline bool blk_needs_flush_plug(struct task_struct *tsk)
 {
 	return false;
+}
+
+static inline int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
+				     sector_t *error_sector)
+{
+	return 0;
 }
 
 #endif /* CONFIG_BLOCK */
