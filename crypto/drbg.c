@@ -2025,7 +2025,7 @@ static int __init drbg_init(void)
 	return crypto_register_algs(drbg_algs, (ARRAY_SIZE(drbg_cores) * 2));
 }
 
-void __exit drbg_exit(void)
+static void __exit drbg_exit(void)
 {
 	crypto_unregister_algs(drbg_algs, (ARRAY_SIZE(drbg_cores) * 2));
 }
