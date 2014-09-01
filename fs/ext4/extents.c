@@ -884,8 +884,10 @@ ext4_ext_find_extent(struct inode *inode, ext4_lblk_t block,
 		goto err;
 	}
 
-	/* account possible depth increase */
-	if (!path) {
+	if (path)
+		ext4_ext_drop_refs(path);
+	else {
+		/* account possible depth increase */
 		path = kzalloc(sizeof(struct ext4_ext_path) * (depth + 2),
 				GFP_NOFS);
 		if (unlikely(!path))
@@ -1388,7 +1390,6 @@ repeat:
 			goto out;
 
 		/* refill path */
-		ext4_ext_drop_refs(path);
 		path = ext4_ext_find_extent(inode,
 				    (ext4_lblk_t)le32_to_cpu(newext->ee_block),
 				    ppath, gb_flags);
@@ -1401,7 +1402,6 @@ repeat:
 			goto out;
 
 		/* refill path */
-		ext4_ext_drop_refs(path);
 		path = ext4_ext_find_extent(inode,
 				   (ext4_lblk_t)le32_to_cpu(newext->ee_block),
 				    ppath, gb_flags);
@@ -3344,7 +3344,6 @@ static int ext4_split_extent(handle_t *handle,
 	 * Update path is required because previous ext4_split_extent_at() may
 	 * result in split of original leaf or extent zeroout.
 	 */
-	ext4_ext_drop_refs(path);
 	path = ext4_ext_find_extent(inode, map->m_lblk, ppath, 0);
 	if (IS_ERR(path))
 		return PTR_ERR(path);
@@ -3743,7 +3742,6 @@ static int ext4_convert_unwritten_extents_endio(handle_t *handle,
 						 EXT4_GET_BLOCKS_CONVERT);
 		if (err < 0)
 			return err;
-		ext4_ext_drop_refs(path);
 		path = ext4_ext_find_extent(inode, map->m_lblk, ppath, 0);
 		if (IS_ERR(path))
 			return PTR_ERR(path);
@@ -3972,7 +3970,6 @@ convert_initialized_extent(handle_t *handle, struct inode *inode,
 				EXT4_GET_BLOCKS_CONVERT_UNWRITTEN);
 		if (err < 0)
 			return err;
-		ext4_ext_drop_refs(path);
 		path = ext4_ext_find_extent(inode, map->m_lblk, ppath, 0);
 		if (IS_ERR(path))
 			return PTR_ERR(path);
