@@ -914,23 +914,15 @@ static const struct tcp_request_sock_ops tcp_request_sock_ipv6_ops = {
 #endif
 #endif
 
-#ifdef CONFIG_MPTCP
-static void tcp_v6_send_response(struct sk_buff *skb, u32 seq, u32 ack,
-				 u32 data_ack, u32 win, u32 tsval, u32 tsecr,int oif,
-				 struct tcp_md5sig_key *key, int rst, u8 tclass,
-				 u32 label, int mptcp)
-#else
-static void tcp_v6_send_response(struct sk_buff *skb, u32 seq, u32 ack, u32 win,
-				 u32 tsval, u32 tsecr,
-				 struct tcp_md5sig_key *key, int rst, u8 tclass,
-				 u32 label)
-#endif
+static void tcp_v6_send_response(struct sock *sk, struct sk_buff *skb, u32 seq,
+				 u32 ack, u32 win, u32 tsval, u32 tsecr,
+				 struct tcp_md5sig_key *key, int rst, u8 tclass)
 {
 	const struct tcphdr *th = tcp_hdr(skb);
 	struct tcphdr *t1;
 	struct sk_buff *buff;
 	struct flowi6 fl6;
-	struct net *net = dev_net(skb_dst(skb)->dev);
+	struct net *net = sk ? sock_net(sk) : dev_net(skb_dst(skb)->dev);
 	struct sock *ctl_sk = net->ipv6.tcp_sk;
 	unsigned int tot_len = sizeof(struct tcphdr);
 	struct dst_entry *dst;
@@ -1100,12 +1092,8 @@ void tcp_v6_send_reset(struct sock *sk, struct sk_buff *skb)
 	else
 		ack_seq = ntohl(th->seq) + th->syn + th->fin + skb->len -
 			  (th->doff << 2);
-#ifdef CONFIG_MPTCP
-	oif = sk ? sk->sk_bound_dev_if : 0;
-	tcp_v6_send_response(skb, seq, ack_seq, 0, 0, 0, 0, oif, key, 1, 0, 0, 0);
-#else
-	tcp_v6_send_response(skb, seq, ack_seq, 0, 0, 0, key, 1, 0, 0);
-#endif
+
+	tcp_v6_send_response(sk, skb, seq, ack_seq, 0, 0, 0, key, 1, 0);
 
 #ifdef CONFIG_TCP_MD5SIG
 release_sk1:
@@ -1116,25 +1104,13 @@ release_sk1:
 #endif
 }
 
-#ifdef CONFIG_MPTCP
-static void tcp_v6_send_ack(struct sk_buff *skb, u32 seq, u32 ack, u32 data_ack,
-			    u32 win, u32 tsval, u32 tsecr, int oif,
-			    struct tcp_md5sig_key *key, u8 tclass,
-			    u32 label, int mptcp)
+static void tcp_v6_send_ack(struct sock *sk, struct sk_buff *skb,
+			    u32 seq, u32 ack, u32 win, u32 tsval, u32 tsecr,
+			    struct tcp_md5sig_key *key, u8 tclass)
 {
-	tcp_v6_send_response(skb, seq, ack, data_ack, win, tsval, tsecr, oif,
-			     key, 0, tclass, label,  mptcp);
+	tcp_v6_send_response(sk, skb, seq, ack, win, tsval, tsecr, key, 0,
+			     tclass);
 }
-#else
-static void tcp_v6_send_ack(struct sk_buff *skb, u32 seq, u32 ack,
-			    u32 win, u32 tsval, u32 tsecr,
-			    struct tcp_md5sig_key *key, u8 tclass,
-			    u32 label)
-{
-	tcp_v6_send_response(skb, seq, ack, win, tsval, tsecr, key, 0, tclass,
-			     label);
-}
-#endif
 
 static void tcp_v6_timewait_ack(struct sock *sk, struct sk_buff *skb)
 {
@@ -1145,24 +1121,11 @@ static void tcp_v6_timewait_ack(struct sock *sk, struct sk_buff *skb)
 	int mptcp = 0;
 #endif
 
-#ifdef CONFIG_MPTCP
-	if (tcptw->mptcp_tw && tcptw->mptcp_tw->meta_tw) {
-		data_ack = (u32)tcptw->mptcp_tw->rcv_nxt;
-		mptcp = 1;
-	}
-	tcp_v6_send_ack(skb, tcptw->tw_snd_nxt, tcptw->tw_rcv_nxt,
-			data_ack,
-			tcptw->tw_rcv_wnd >> tw->tw_rcv_wscale,
-			tcp_time_stamp + tcptw->tw_ts_offset,
-			tcptw->tw_ts_recent, tw->tw_bound_dev_if, tcp_twsk_md5_key(tcptw),
-			tw->tw_tclass, (tw->tw_flowlabel << 12), mptcp);
-#else
-	tcp_v6_send_ack(skb, tcptw->tw_snd_nxt, tcptw->tw_rcv_nxt,
+	tcp_v6_send_ack(sk, skb, tcptw->tw_snd_nxt, tcptw->tw_rcv_nxt,
 			tcptw->tw_rcv_wnd >> tw->tw_rcv_wscale,
 			tcp_time_stamp + tcptw->tw_ts_offset,
 			tcptw->tw_ts_recent, tcp_twsk_md5_key(tcptw),
 			tw->tw_tclass, (tw->tw_flowlabel << 12));
-#endif
 	inet_twsk_put(tw);
 }
 
@@ -1172,23 +1135,11 @@ static
 void tcp_v6_reqsk_send_ack(struct sock *sk, struct sk_buff *skb,
 				  struct request_sock *req)
 {
-#ifdef CONFIG_MPTCP
-	/* sk->sk_state == TCP_LISTEN -> for regular TCP_SYN_RECV
-	 * sk->sk_state == TCP_SYN_RECV -> for Fast Open.
-	 */
-	tcp_v6_send_ack(skb, (sk->sk_state == TCP_LISTEN) ?
-			tcp_rsk(req)->snt_isn + 1 : tcp_sk(sk)->snd_nxt,
-			tcp_rsk(req)->rcv_nxt, 0,
-			req->rcv_wnd, tcp_time_stamp, req->ts_recent, sk->sk_bound_dev_if,
-			tcp_v6_md5_do_lookup(sk, &ipv6_hdr(skb)->daddr),
-			0, 0, 0);
-#else
-	tcp_v6_send_ack(skb, tcp_rsk(req)->snt_isn + 1, tcp_rsk(req)->rcv_isn + 1,
+	tcp_v6_send_ack(sk, skb, tcp_rsk(req)->snt_isn + 1, tcp_rsk(req)->rcv_isn + 1,
 			req->rcv_wnd >> inet_rsk(req)->rcv_wscale,
 			tcp_time_stamp, req->ts_recent,
 			tcp_v6_md5_do_lookup(sk, &ipv6_hdr(skb)->daddr),
 			0, 0);
-#endif
 }
 
 #ifndef CONFIG_MPTCP
