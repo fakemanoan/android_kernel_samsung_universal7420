@@ -440,6 +440,15 @@ static int stop_machine_cpu_stop(void *data)
 			}
 			ack_state(smdata);
 		}
+
+#ifdef CONFIG_ARM64
+		if (smdata->state == curstate)
+			wfe();
+		else {
+			dsb(sy);
+			sev();
+		}
+#endif
 	} while (curstate != STOPMACHINE_EXIT);
 
 	local_irq_restore(flags);
