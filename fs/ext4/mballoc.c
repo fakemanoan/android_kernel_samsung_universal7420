@@ -4717,6 +4717,7 @@ void ext4_free_blocks(handle_t *handle, struct inode *inode,
 
 	if (bh && (flags & EXT4_FREE_BLOCKS_FORGET)) {
 		BUG_ON(count > 1);
+
 		ext4_forget(handle, flags & EXT4_FREE_BLOCKS_METADATA,
 			    inode, bh, block);
 	}
@@ -4755,12 +4756,14 @@ void ext4_free_blocks(handle_t *handle, struct inode *inode,
 
 	if (!bh && (flags & EXT4_FREE_BLOCKS_FORGET)) {
 		int i;
-		int is_metadata = flags & EXT4_FREE_BLOCKS_METADATA;
 
 		for (i = 0; i < count; i++) {
-			if (is_metadata)
-				bh = sb_find_get_block(inode->i_sb, block + i);
-			ext4_forget(handle, is_metadata, inode, bh, block + i);
+			cond_resched();
+			bh = sb_find_get_block(inode->i_sb, block + i);
+			if (!bh)
+				continue;
+			ext4_forget(handle, flags & EXT4_FREE_BLOCKS_METADATA,
+				    inode, bh, block + i);
 		}
 	}
 
