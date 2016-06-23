@@ -59,29 +59,11 @@ SECTIONS
 		*(.got)			/* Global offset table		*/
 	}
 
+	_etext = .;			/* End of text section */
+
 	RO_DATA(PAGE_SIZE)
 	EXCEPTION_TABLE(8)
 	NOTES
-#ifdef CONFIG_TIMA_RKP
-	. = ALIGN(PAGE_SIZE);
-	.rkp.bitmap : {
-		rkp_pgt_bitmap = .;
-		. = rkp_pgt_bitmap + 0x20000;
-	}
-	.rkp.dblmap : {
-		rkp_map_bitmap = .;
-		. = rkp_map_bitmap + 0x20000;
-	}
-#ifdef CONFIG_RKP_KDP
-	 /* Creating a new section to store task credentials */
-	. = ALIGN(PAGE_SIZE);
-	.rkp.prot.page : {
-		__rkp_ro_start = .;
-	}
-	. = ALIGN(PAGE_SIZE);
-	. = ALIGN(1 << 21);
-#endif /* CONFIG_RKP_KDP*/
-#endif
 	_etext = .;			/* End of text and rodata section */
 
 	. = ALIGN(PAGE_SIZE);
