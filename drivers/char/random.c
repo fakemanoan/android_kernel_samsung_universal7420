@@ -260,6 +260,7 @@
 #include <linux/freezer.h>
 #include <linux/syscalls.h>
 #include <linux/completion.h>
+#include <linux/uuid.h>
 
 #ifdef CONFIG_GENERIC_HARDIRQS
 # include <linux/irq.h>
