@@ -20,6 +20,7 @@
 #include "s6e3ha2_s6e3ha0_wqhd_param.h"
 #include "../dsim.h"
 #include <video/mipi_display.h>
+#include <linux/variant_detection.h>
 
 static unsigned dynamic_lcd_type = 0;
 
@@ -1589,6 +1590,8 @@ struct dsim_panel_ops *dsim_panel_get_priv_ops(struct dsim_device *dsim)
 static int __init get_lcd_type(char *arg)
 {
 	unsigned int lcdtype;
+	if (variant_edge == IS_EDGE)
+		return 0;
 
 	get_option(&arg, &lcdtype);
 

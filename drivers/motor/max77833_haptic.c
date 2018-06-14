@@ -851,4 +851,3 @@ module_exit(max77833_haptic_exit);
 MODULE_AUTHOR("ByungChang Cha <bc.cha@samsung.com>");
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("max77833 haptic driver");
-

@@ -99,7 +99,8 @@
 	};
 
 	chosen {
-		bootargs = "console=ttySAC1,115200n8 ess_setup=0x46000000k androidboot.selinux=permissive";
+
+		bootargs = "console=ttySAC1,115200n8 ess_setup=0x46000000";
 		linux,initrd-start = <0x42000000>;
 		linux,initrd-end = <0x420FFFFF>;
 	};
@@ -137,7 +138,7 @@
 		supports-ddr200-mode;
 		enable-cache-control;
 		use-enable-shift;
-		qos_int_level = <400000>;
+		qos_int_level = <468000>;
 		desc-size = <3>;
 		fifo-depth = <0x40>;
 		card-detect-delay = <200>;
@@ -214,7 +215,7 @@
 		desc-size = <3>;
 		fifo-depth = <0x40>;
 		card-detect-delay = <200>;
-		qos_int_level = <400000>;
+		qos_int_level = <468000>;
 		bypass-for-allpass;
 		fix-fmp-size-mismatch;
 		not-allow-single-dma;
