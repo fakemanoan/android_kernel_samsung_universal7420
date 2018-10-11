@@ -9,6 +9,11 @@
 #
 #
 
+config DDK_VERSION_OS
+	string "version"
+	default "n"
+	help
+	  Android OS major version
 
 menu "ARM GPU Configuration"
 source "drivers/gpu/arm/t6xx/kbase/Kconfig"
