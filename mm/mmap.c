@@ -2287,13 +2287,12 @@ int expand_downwards(struct vm_area_struct *vma,
 				   unsigned long address)
 {
 	struct vm_area_struct *prev;
-	unsigned long gap_addr;	
-	int error;
+	unsigned long gap_addr;
+	int error = 0;
 
 	address &= PAGE_MASK;
-	error = security_mmap_addr(address);
-	if (error)
-		return error;
+	if (address < mmap_min_addr)
+		return -EPERM;
 
 	/* Enforce stack_guard_gap */
 	gap_addr = address - stack_guard_gap;
