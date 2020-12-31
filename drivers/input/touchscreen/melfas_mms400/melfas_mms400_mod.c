@@ -163,7 +163,10 @@ void mms_input_event_handler(struct mms_ts_info *info, u8 sz, u8 *buf)
 		int id = (tmp[0] & MIP_EVENT_INPUT_ID) - 1;
 		int x = tmp[2] | ((tmp[1] & 0xf) << 8);
 		int y = tmp[3] | (((tmp[1] >> 4) & 0xf) << 8);
+#ifdef CONFIG_SEC_FACTORY
 		int pressure = tmp[4];
+
+#endif
 		int touch_major = tmp[6];
 		int touch_minor = tmp[7];
 
@@ -222,7 +225,7 @@ void mms_input_event_handler(struct mms_ts_info *info, u8 sz, u8 *buf)
 						input_report_key(info->input_dev, BTN_TOUCH, 0);
 						input_report_key(info->input_dev,
 									BTN_TOOL_FINGER, 0);
-					}
+				}
 
 					info->finger[id].finger_state = 0;
 #ifdef CONFIG_SAMSUNG_PRODUCT_SHIP
@@ -277,16 +280,6 @@ void mms_input_event_handler(struct mms_ts_info *info, u8 sz, u8 *buf)
 				info->finger[id].finger_state = 1;
 				info->finger[id].move_count = 0;
 				info->touch_count++;
-#ifdef CONFIG_SAMSUNG_PRODUCT_SHIP
-				input_info(true, &client->dev,
-					"P[%d] loc:%c%c z:%d p:%d m:%d,%d tc:%d\n",
-					id, location_detect(info, y, 1), location_detect(info, x, 0),
-					pressure, palm, touch_major, touch_minor, info->touch_count);
-#else
-				input_err(true, &client->dev,
-					"P[%d] (%d, %d) z:%d p:%d m:%d,%d tc:%d\n",
-					id, x, y, pressure, palm, touch_major, touch_minor, info->touch_count);
-#endif
 #if defined (CONFIG_INPUT_BOOSTER)
 				input_booster_send_event(BOOSTER_DEVICE_TOUCH, BOOSTER_MODE_ON);
 #endif
