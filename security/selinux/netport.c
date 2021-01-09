@@ -247,10 +247,6 @@ static __init int sel_netport_init(void)
 {
 	int iter;
 	int ret;
-#if defined(SELINUX_ALWAYS_ENFORCE) || \
-	defined(SELINUX_ALWAYS_PERMISSIVE)
-	selinux_enabled = 1;
-#endif
 	if (!selinux_enabled)
 		return 0;
 
