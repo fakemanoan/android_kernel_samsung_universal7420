@@ -45,7 +45,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
 {
 	struct request_queue *q = bdev_get_queue(bdev);
 	struct bio *bio = *biop;
-	int type = REQ_WRITE | REQ_DISCARD | REQ_PRIO;
+	int type = REQ_WRITE | REQ_DISCARD;
 	sector_t max_discard_sectors;
 	sector_t granularity, alignment;
 	sector_t bs_mask;

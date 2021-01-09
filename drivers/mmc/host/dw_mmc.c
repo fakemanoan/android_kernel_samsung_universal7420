@@ -171,7 +171,7 @@ do {					\
 extern void dw_mci_exynos_smu_reset(struct dw_mci *host);
 static struct dma_attrs dw_mci_direct_attrs;
 
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT) || defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
+#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 static void dw_mci_request_end(struct dw_mci *host, struct mmc_request *mrq,
 				enum dw_mci_state *state);
 #endif
@@ -1053,10 +1053,9 @@ static void dw_mci_translate_sglist(struct dw_mci *host, struct mmc_data *data,
 	int desc_cnt = 0;
 	struct idmac_desc *desc = host->sg_cpu;
 	unsigned int rw_size = DW_MMC_MAX_TRANSFER_SIZE;
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT) || defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
+#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 	unsigned int sector = 0;
 	unsigned int sector_key = DW_MMC_BYPASS_SECTOR_BEGIN;
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 	struct mmc_blk_request *brq = NULL;
 	struct mmc_queue_req *mq_rq = NULL;
 
@@ -1074,20 +1073,11 @@ static void dw_mci_translate_sglist(struct dw_mci *host, struct mmc_data *data,
 		}
 	}
 #endif
-#endif
 	for (i = 0; i < sg_len; i++) {
 		unsigned int length = sg_dma_len(&data->sg[i]);
 		unsigned int sz_per_desc;
 		unsigned int left = length;
 		u64 mem_addr = sg_dma_address(&data->sg[i]);
-
-#if defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
-		if (test_bit(PG_sensitive_data, &sg_page(&data->sg[i])->flags)) {
-			sector_key |= DW_MMC_FILE_ENCRYPTION_SECTOR_BEGIN;
-		} else {
-			sector_key &= ~DW_MMC_FILE_ENCRYPTION_SECTOR_BEGIN;
-		}
-#endif
 		for (j = 0; j < (length + rw_size - 1) / rw_size; j++) {
 			/*
 			 * Set the OWN bit
@@ -1113,7 +1103,7 @@ static void dw_mci_translate_sglist(struct dw_mci *host, struct mmc_data *data,
 			desc->des2 = mem_addr;
 #endif
 
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT) || defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
+#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 #ifdef CONFIG_MMC_DW_64_IDMAC /*64bit*/
 			if (sector_key == DW_MMC_BYPASS_SECTOR_BEGIN) {
 				IDMAC_SET_DAS(desc, CLEAR);
@@ -1149,55 +1139,6 @@ static void dw_mci_translate_sglist(struct dw_mci *host, struct mmc_data *data,
 						disk_key_flag = 0;
 						spin_unlock(&disk_key_lock);
 					}
-				}
-				if ((sector_key & DW_MMC_FILE_ENCRYPTION_SECTOR_BEGIN) &&
-					(host->pdata->quirks & DW_MCI_QUIRK_USE_SMU)) {
-					unsigned int aes_alg, j;
-
-					/* File algorithm selector*/
-					if (!strncmp(sg_page(&data->sg[i])->mapping->alg, "aes", sizeof("aes")))
-						aes_alg = AES_CBC;
-					else if (!strncmp(sg_page(&data->sg[i])->mapping->alg, "aesxts", sizeof("aesxts")))
-						aes_alg = AES_XTS;
-					else {
-						dev_err(host->dev, "Invalid file algorithm: %s\n", sg_page(&data->sg[i])->mapping->alg);
-						spin_lock(&host->lock);
-						host->mrq_cmd->cmd->error = -EBADR;
-						dw_mci_request_end(host, host->mrq_cmd, &host->state_dat);
-						host->state_cmd = STATE_IDLE;
-						spin_unlock(&host->lock);
-					}
-
-					IDMAC_SET_FAS(desc, aes_alg);
-
-					/* File enc key size */
-					switch (sg_page(&data->sg[i])->mapping->key_length) {
-					case 16:
-						desc->des2 &= ~IDMAC_DES2_FKL;
-						break;
-					case 32:
-					case 64:
-						desc->des2 |= IDMAC_DES2_FKL;
-						break;
-					default:
-						dev_err(host->dev, "Invalid file key length: %lx\n", sg_page(&data->sg[i])->mapping->key_length);
-						spin_lock(&host->lock);
-						host->mrq_cmd->cmd->error = -EBADR;
-						dw_mci_request_end(host, host->mrq_cmd, &host->state_dat);
-						host->state_cmd = STATE_IDLE;
-						spin_unlock(&host->lock);
-					}
-
-					/* File IV */
-					desc->des8 = word_in(sg_page(&data->sg[i])->mapping->iv, 3);
-					desc->des9 = word_in(sg_page(&data->sg[i])->mapping->iv, 2);
-					desc->des10 = word_in(sg_page(&data->sg[i])->mapping->iv, 1);
-					desc->des11 = word_in(sg_page(&data->sg[i])->mapping->iv, 0);
-
-					/* File Enc key */
-					for (j = 0; j < sg_page(&data->sg[i])->mapping->key_length >> 2; j++)
-						*(&(desc->des12) + j) =
-							word_in(sg_page(&data->sg[i])->mapping->key, (sg_page(&data->sg[i])->mapping->key_length >> 2) - (j + 1));
 				}
 			}
 #else /*32bit*/

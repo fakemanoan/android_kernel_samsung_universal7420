@@ -616,64 +616,6 @@ static void exynos_use_feedback(void)
 	}
 }
 
-#define EXYNOS5422_PRINT_PMU(name) \
-	pr_info("  - %s  CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n", \
-			#name, \
-			__raw_readl(EXYNOS5422_##name##_CONFIGURATION), \
-			__raw_readl(EXYNOS5422_##name##_STATUS), \
-			__raw_readl(EXYNOS5422_##name##_OPTION))
-
-void show_exynos_pmu(void)
-{
-	int i;
-	pr_info("\n");
-	pr_info(" -----------------------------------------------------------------------------------\n");
-	pr_info(" **** CPU PMU register dump ****\n");
-	for (i=0; i < NR_CPUS; i++) {
-		printk("[%d]   CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n", i,
-			__raw_readl(EXYNOS5422_ARM_CORE0_CONFIGURATION + i * 0x80),
-			__raw_readl(EXYNOS5422_ARM_CORE0_STATUS + i * 0x80),
-			__raw_readl(EXYNOS5422_ARM_CORE0_OPTION + i * 0x80));
-	}
-	pr_info("      EGL L2 CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n",
-			__raw_readl(EXYNOS5422_ARM_L2_CONFIGURATION),
-			__raw_readl(EXYNOS5422_ARM_L2_STATUS),
-			__raw_readl(EXYNOS5422_ARM_L2_OPTION));
-	pr_info("      KFC L2 CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n",
-			__raw_readl(EXYNOS5422_KFC_L2_CONFIGURATION),
-			__raw_readl(EXYNOS5422_KFC_L2_STATUS),
-			__raw_readl(EXYNOS5422_KFC_L2_OPTION));
-	pr_info(" **** LOCAL BLOCK POWER ****\n");
-	EXYNOS5422_PRINT_PMU(SCALER);
-	EXYNOS5422_PRINT_PMU(ISP);
-	EXYNOS5422_PRINT_PMU(MFC);
-	EXYNOS5422_PRINT_PMU(G3D);
-	EXYNOS5422_PRINT_PMU(DISP1);
-	EXYNOS5422_PRINT_PMU(MAU);
-	EXYNOS5422_PRINT_PMU(G2D);
-	EXYNOS5422_PRINT_PMU(MSC);
-	EXYNOS5422_PRINT_PMU(FSYS);
-	EXYNOS5422_PRINT_PMU(FSYS2);
-	EXYNOS5422_PRINT_PMU(PSGEN);
-	EXYNOS5422_PRINT_PMU(PERIC);
-	EXYNOS5422_PRINT_PMU(WCORE);
-	pr_info(" **** POWER MODE FLAGS ****\n");
-	pr_info("      EGL STATES : 0x%x  0x%x  0x%x  0x%x\n",
-			__raw_readl(REG_CPU_STATE_ADDR + 0x0),
-			__raw_readl(REG_CPU_STATE_ADDR + 0x4),
-			__raw_readl(REG_CPU_STATE_ADDR + 0x8),
-			__raw_readl(REG_CPU_STATE_ADDR + 0xC));
-	pr_info("      KFC STATES : 0x%x  0x%x  0x%x  0x%x\n",
-			__raw_readl(REG_CPU_STATE_ADDR + 0x10),
-			__raw_readl(REG_CPU_STATE_ADDR + 0x14),
-			__raw_readl(REG_CPU_STATE_ADDR + 0x18),
-			__raw_readl(REG_CPU_STATE_ADDR + 0x1C));
-	pr_info("      CLUSTER STATES : 0x%x  0x%x\n",
-			__raw_readl(REG_CPU_STATE_ADDR + 0x20),
-			__raw_readl(REG_CPU_STATE_ADDR + 0x24));
-	pr_info(" -----------------------------------------------------------------------------------\n");
-}
-
 int __init exynos5422_pmu_init(void)
 {
 	unsigned int value, i;

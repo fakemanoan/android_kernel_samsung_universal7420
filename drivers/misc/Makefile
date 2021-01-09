@@ -36,7 +36,6 @@ obj-$(CONFIG_SENSORS_TSL2550)	+= tsl2550.o
 obj-$(CONFIG_EP93XX_PWM)	+= ep93xx_pwm.o
 obj-$(CONFIG_DS1682)		+= ds1682.o
 obj-$(CONFIG_TI_DAC7512)	+= ti_dac7512.o
-obj-$(CONFIG_UID_STAT)		+= uid_stat.o
 obj-$(CONFIG_C2PORT)		+= c2port/
 obj-$(CONFIG_HMC6352)		+= hmc6352.o
 obj-y				+= eeprom/
@@ -71,9 +70,6 @@ obj-$(CONFIG_MOBICORE_DRIVER)  += tzic64.o
 # BlowFish
 obj-$(CONFIG_TZDEV)		+= tzdev/
 
-# Tima
-obj-$(CONFIG_TIMA_LOG)		+= tima_debug_log.o
-
 # SS/DS
 obj-$(CONFIG_CHECK_SIMSLOT_COUNT) += sim_slot.o
 
@@ -85,4 +81,3 @@ obj-$(CONFIG_DM_VERITY)		+= dmverity_query.o
 
 # IrDA FPGA
 obj-$(CONFIG_SEC_FPGA_ICE40XX)  += ice40xx.o
-

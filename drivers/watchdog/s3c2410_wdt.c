@@ -40,7 +40,6 @@
 #include <linux/slab.h>
 #include <linux/err.h>
 #include <linux/of.h>
-#include <linux/exynos-ss.h>
 
 #include <mach/map.h>
 #include <mach/pmu.h>
@@ -329,36 +328,6 @@ int s3c2410wdt_keepalive_emergency(void)
 	return 0;
 }
 
-#ifdef CONFIG_EXYNOS_SNAPSHOT_WATCHDOG_RESET
-static int s3c2410wdt_panic_handler(struct notifier_block *nb,
-				   unsigned long l, void *buf)
-{
-	if (!s3c2410_wdd.dev)
-		return -ENODEV;
-
-	/* We assumed that num_online_cpus() > 1 status is abnormal */
-	if (exynos_ss_get_hardlockup() || num_online_cpus() > 1) {
-		dev_emerg(wdt_dev, "watchdog reset is started on panic after 5secs\n");
-
-		/* set watchdog timer is started and  set by 5 seconds*/
-		s3c2410wdt_set_heartbeat(&s3c2410_wdd, 5);
-		s3c2410wdt_start(&s3c2410_wdd);
-	} else {
-		/*
-		 * kick watchdog to prevent unexpected reset during panic sequence
-		 * and it prevents the hang during panic sequence by watchedog
-		 */
-		s3c2410wdt_keepalive(&s3c2410_wdd);
-	}
-
-	return 0;
-}
-
-static struct notifier_block nb_panic_block = {
-	.notifier_call = s3c2410wdt_panic_handler,
-};
-#endif
-
 static int s3c2410wdt_probe(struct platform_device *pdev)
 {
 	struct device *dev;
@@ -477,10 +446,6 @@ static int s3c2410wdt_probe(struct platform_device *pdev)
 
 	wtcon = readl(wdt_base + S3C2410_WTCON);
 
-#ifdef CONFIG_EXYNOS_SNAPSHOT_WATCHDOG_RESET
-	/* register panic handler for watchdog reset */
-	atomic_notifier_chain_register(&panic_notifier_list, &nb_panic_block);
-#endif
 	dev_info(dev, "watchdog %sactive, reset %sabled, irq %sabled\n",
 		 (wtcon & S3C2410_WTCON_ENABLE) ?  "" : "in",
 		 (wtcon & S3C2410_WTCON_RSTEN) ? "en" : "dis",

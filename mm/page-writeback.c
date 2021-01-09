@@ -37,7 +37,6 @@
 #include <linux/timer.h>
 #include <linux/sched/rt.h>
 #include <trace/events/writeback.h>
-#include <linux/version.h>
 
 /*
  * Sleep at most 200ms at a time in balance_dirty_pages().
@@ -1382,16 +1381,6 @@ pause:
 					  period,
 					  pause,
 					  start_time);
-		/* Just collecting approximate value. No lock required. */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0))
-		bdi->last_thresh = strictlimit ? bdi_thresh : dirty_thresh;
-		bdi->last_nr_dirty = strictlimit ? bdi_dirty : nr_dirty;
-#else
-		bdi->last_thresh = dirty_thresh;
-		bdi->last_nr_dirty = nr_dirty;
-#endif
-		bdi->paused_total += pause;
-
 		__set_current_state(TASK_KILLABLE);
 		io_schedule_timeout(pause);
 

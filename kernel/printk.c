@@ -51,10 +51,6 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/printk.h>
 
-#ifdef CONFIG_SEC_DEBUG
-#include <linux/sec_debug.h>
-#endif
-
 #ifdef CONFIG_EARLY_PRINTK_DIRECT
 extern void printascii(char *);
 #endif
@@ -216,12 +212,6 @@ struct log {
 	u8 facility;		/* syslog facility */
 	u8 flags:5;		/* internal record flags */
 	u8 level:3;		/* syslog level */
-#ifdef CONFIG_PRINTK_PROCESS
-	char process[16];	/* process name */
-	pid_t pid;		/* process id */
-	u8 cpu;			/* cpu id */
-	u8 in_interrupt;	/* interrupt context */
-#endif
 };
 
 /*
@@ -262,11 +252,7 @@ static u32 clear_idx_knox;
 #define SYSLOG_ACTION_READ_CLEAR_KNOX 99
 /* } SecProductFeature_KNOX.SEC_PRODUCT_FEATURE_KNOX_SUPPORT_MDM */
 
-#ifdef CONFIG_PRINTK_PROCESS
-#define PREFIX_MAX		48
-#else
 #define PREFIX_MAX		32
-#endif
 #define LOG_LINE_MAX		1024 - PREFIX_MAX
 
 /* record buffer */
@@ -326,38 +312,6 @@ static u32 log_next(u32 idx)
 	}
 	return idx + msg->len;
 }
-
-#ifdef CONFIG_PRINTK_PROCESS
-static bool printk_process = 1;
-static size_t print_process(const struct log *msg, char *buf)
-{
-	if (!printk_process)
-		return 0;
-
-	if (!buf)
-		return snprintf(NULL, 0, "%c[%1d:%15s:%5d] ", ' ', 0, " ", 0);
-
-	return sprintf(buf, "%c[%1d:%15s:%5d] ", 
-			msg->in_interrupt ? 'I' : ' ',
-			msg->cpu,
-			msg->process,
-			msg->pid);
-}
-#else
-static bool printk_process = 0;
-static size_t print_process(const struct log *msg, char *buf)
-{
-	return 0;
-}
-#endif
-module_param_named(process, printk_process, bool, S_IRUGO | S_IWUSR);
-
-#ifdef CONFIG_SEC_DEBUG
-void sec_debug_disable_printk_process(void)
-{
-	printk_process = 0;
-}
-#endif
 
 #ifdef CONFIG_EXYNOS_SNAPSHOT
 static size_t hook_size;
@@ -450,16 +404,6 @@ static void log_store(int facility, int level,
 		msg->ts_nsec = local_clock();
 	memset(log_dict(msg) + dict_len, 0, pad_len);
 	msg->len = sizeof(struct log) + text_len + dict_len + pad_len;
-
-#ifdef CONFIG_PRINTK_PROCESS
-	if (printk_process) {
-		strncpy(msg->process, current->comm, sizeof(msg->process)-1);
-		msg->process[sizeof(msg->process)-1]='\0';
-		msg->pid = task_pid_nr(current);
-		msg->cpu = smp_processor_id();
-		msg->in_interrupt = in_interrupt() ? 1 : 0;
-	}
-#endif
 
 #ifdef CONFIG_EXYNOS_SNAPSHOT
 	if (func_hook_logbuf) {
@@ -972,13 +916,6 @@ static inline void boot_delay_msec(int level)
 }
 #endif
 
-#if defined(CONFIG_PRINTK_CORE_NUM)
-static bool printk_core_num = 1;
-#else
-static bool printk_core_num = 0;
-#endif
-module_param_named(core_num, printk_core_num, bool, S_IRUGO | S_IWUSR);
-
 #if defined(CONFIG_PRINTK_TIME)
 static bool printk_time = 1;
 #else
@@ -1022,9 +959,6 @@ static size_t print_prefix(const struct log *msg, bool syslog, char *buf)
 	}
 
 	len += print_time(msg->ts_nsec, buf ? buf + len : NULL);
-#ifdef CONFIG_PRINTK_PROCESS
-	len += print_process(msg, buf ? buf + len : NULL);
-#endif
 	return len;
 }
 
@@ -1637,10 +1571,6 @@ static size_t cont_print_text(char *text, size_t size)
 
 	if (cont.cons == 0 && (console_prev & LOG_NEWLINE)) {
 		textlen += print_time(cont.ts_nsec, text);
-#ifdef CONFIG_PRINTK_PROCESS
-		*(text+textlen) = ' ';
-		textlen += print_process(NULL, NULL);
-#endif
 		size -= textlen;
 	}
 
@@ -1674,7 +1604,6 @@ asmlinkage int vprintk_emit(int facility, int level,
 	unsigned long flags;
 	int this_cpu;
 	int printed_len = 0;
-	static bool prev_new_line = true;
 
 	boot_delay_msec(level);
 	printk_delay();
@@ -1720,33 +1649,12 @@ asmlinkage int vprintk_emit(int facility, int level,
 	 * The printf needs to come first; we need the syslog
 	 * prefix which might be passed-in as a parameter.
 	 */
-	if (printk_core_num && prev_new_line) {
-		char tempbuf[LOG_LINE_MAX];
-		char *temp = tempbuf;
-
-		vscnprintf(temp, sizeof(tempbuf), fmt, args);
-		if (printk_get_level(tempbuf))
-			text_len = snprintf(text, sizeof(textbuf),
-					    "%c%c[c%d] %s", tempbuf[0],
-					    tempbuf[1], this_cpu, &tempbuf[2]);
-		else
-			text_len = snprintf(text, sizeof(textbuf), "[c%d] %s",
-					    this_cpu, &tempbuf[0]);
-	} else {
-		text_len = vscnprintf(text, sizeof(textbuf), fmt, args);
-	}
-
-#ifdef	CONFIG_DEBUG_LL
-	printascii(text);
-#endif
+	text_len = vscnprintf(text, sizeof(textbuf), fmt, args);
 
 	/* mark and strip a trailing newline */
 	if (text_len && text[text_len-1] == '\n') {
 		text_len--;
 		lflags |= LOG_NEWLINE;
-		prev_new_line = true;
-	} else {
-		prev_new_line = false;
 	}
 
 	/* strip kernel syslog prefix and extract log level or control flags */

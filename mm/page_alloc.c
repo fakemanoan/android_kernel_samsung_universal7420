@@ -113,19 +113,6 @@ unsigned long dirty_balance_reserve __read_mostly;
 int percpu_pagelist_fraction;
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;
 
-static unsigned int boot_mode = 0;
-static int __init setup_bootmode(char *str)
-{
-	printk("%s: boot_mode is %u\n", __func__, boot_mode);
-	if (get_option(&str, &boot_mode)) {
-		printk("%s: boot_mode is %u\n", __func__, boot_mode);
-		return 0;
-	}
-
-	return -EINVAL;
-}
-early_param("bootmode", setup_bootmode);
-
 #ifdef CONFIG_PM_SLEEP
 /*
  * The following functions are used by the suspend/hibernate code to temporarily
@@ -2451,7 +2438,6 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
 	bool sync_migration = false;
 	bool deferred_compaction = false;
 	bool contended_compaction = false;
-	unsigned long start_tick = jiffies;
 
 	/*
 	 * In the slowpath, we sanity check order to avoid ever trying to
@@ -2571,10 +2557,8 @@ rebalance:
 	/*
 	 * If we failed to make any progress reclaiming, then we are
 	 * running out of options and have to consider going OOM
-	 * If we are looping more than 250 ms, go to OOM
 	 */
-	if ((!did_some_progress || time_after(jiffies, start_tick + (HZ/4)))
-		&& (boot_mode != 2)) {
+	if (!did_some_progress) {
 		if ((gfp_mask & __GFP_FS) && !(gfp_mask & __GFP_NORETRY)) {
 			if (oom_killer_disabled)
 				goto nopage;
@@ -2582,12 +2566,6 @@ rebalance:
 			if ((current->flags & PF_DUMPCORE) &&
 			    !(gfp_mask & __GFP_NOFAIL))
 				goto nopage;
-
-			if (did_some_progress)
-				pr_info("time's up : calling "
-					"__alloc_pages_may_oom(o:%u, gfp:0x%x)\n",
-								order, gfp_mask);
-
 			page = __alloc_pages_may_oom(gfp_mask, order,
 					zonelist, high_zoneidx,
 					nodemask, preferred_zone,
@@ -2613,9 +2591,6 @@ rebalance:
 					goto nopage;
 			}
 
-#ifdef CONFIG_SEC_OOM_KILLER
-			start_tick = jiffies;
-#endif
 			goto restart;
 		}
 	}
@@ -5477,9 +5452,6 @@ void setup_per_zone_wmarks(void)
  */
 static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 {
-#ifdef CONFIG_FIX_INACTIVE_RATIO
-	zone->inactive_ratio = 1;
-#else
 	unsigned int gb, ratio;
 
 	/* Zone size in gigabytes */
@@ -5490,7 +5462,6 @@ static void __meminit calculate_zone_inactive_ratio(struct zone *zone)
 		ratio = 1;
 
 	zone->inactive_ratio = ratio;
-#endif
 }
 
 static void __meminit setup_per_zone_inactive_ratio(void)

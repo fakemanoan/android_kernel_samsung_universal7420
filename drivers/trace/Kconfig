@@ -93,16 +93,6 @@ config EXYNOS_SNAPSHOT_PSTORE
 	select PSTORE_PMSG
 	default y
 
-config EXYNOS_SNAPSHOT_PANIC_REBOOT
-	bool "Enable forced reboot after panic for ramdump"
-	depends on EXYNOS_SNAPSHOT
-	default y
-
-config EXYNOS_SNAPSHOT_WATCHDOG_RESET
-	bool "Support watchdog reset when hardlockup detect"
-	depends on EXYNOS_SNAPSHOT && EXYNOS_SNAPSHOT_PANIC_REBOOT
-	default y
-
 config EXYNOS_SNAPSHOT_MINIMIZED_MODE
 	bool "Support minimized feature configuration"
 	depends on EXYNOS_SNAPSHOT

@@ -98,11 +98,6 @@ struct noc_dev {
 	spinlock_t			ctrl_lock;
 };
 
-struct noc_panic_block {
-	struct notifier_block nb_panic_block;
-	struct noc_dev *pdev;
-};
-
 /* declare notifier_list */
 static ATOMIC_NOTIFIER_HEAD(noc_notifier_list);
 
@@ -292,28 +287,6 @@ void noc_notifier_chain_register(struct notifier_block *block)
 	atomic_notifier_chain_register(&noc_notifier_list, block);
 }
 
-static int noc_logging_panic_handler(struct notifier_block *nb,
-				   unsigned long l, void *buf)
-{
-	struct noc_panic_block *noc_panic = (struct noc_panic_block *)nb;
-	struct noc_dev *noc = noc_panic->pdev;
-	struct noc_platdata *pdata = noc->pdata;
-	unsigned int bits;
-	unsigned int val;
-
-	if (!IS_ERR_OR_NULL(noc)) {
-		/* Check error has been logged */
-		val = __raw_readl(noc->regs + NOC_LOGGING_REG_ERRVLD);
-		bits = noc_get_bits(pdata->errvld_bits, val);
-
-		if (bits)
-			noc_logging_dump(noc);
-		else
-			dev_info(noc->dev, "BUS monitor did not detect any error.\n");
-	}
-	return 0;
-}
-
 static void noc_timeout_init(struct noc_dev *noc)
 {
 	struct noc_timeout *timeout;
@@ -432,7 +405,6 @@ static int noc_probe(struct platform_device *pdev)
 {
 	struct noc_dev *noc;
 	struct noc_platdata *pdata = NULL;
-	struct noc_panic_block *noc_panic = NULL;
 	const struct of_device_id *match;
 	struct resource *res;
 	int ret;
@@ -483,16 +455,6 @@ static int noc_probe(struct platform_device *pdev)
 	if (ret) {
 		dev_err(&pdev->dev, "irq request failed\n");
 		return -ENXIO;
-	}
-
-	noc_panic = devm_kzalloc(&pdev->dev, sizeof(struct noc_panic_block), GFP_KERNEL);
-	if (!noc_panic) {
-		dev_err(&pdev->dev, "failed to allocate memory for driver's "
-				"panic handler data\n");
-	} else {
-		noc_panic->nb_panic_block.notifier_call = noc_logging_panic_handler;
-		noc_panic->pdev = noc;
-		atomic_notifier_chain_register(&panic_notifier_list, &noc_panic->nb_panic_block);
 	}
 
 	platform_set_drvdata(pdev, noc);

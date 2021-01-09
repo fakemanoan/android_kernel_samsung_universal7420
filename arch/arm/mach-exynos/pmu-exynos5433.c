@@ -393,58 +393,6 @@ void exynos_pmu_wdt_control(bool on, unsigned int pmu_wdt_reset_type)
 	return;
 }
 
-#define EXYNOS5433_PRINT_PMU(name) \
-	pr_info("  - %s  CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n", \
-			#name, \
-			__raw_readl(EXYNOS5433_##name##_CONFIGURATION), \
-			__raw_readl(EXYNOS5433_##name##_STATUS), \
-			__raw_readl(EXYNOS5433_##name##_OPTION))
-
-void show_exynos_pmu(void)
-{
-	int i;
-	pr_info("\n");
-	pr_info(" -----------------------------------------------------------------------------------\n");
-	pr_info(" **** CPU PMU register dump ****\n");
-	for (i=0; i < NR_CPUS; i++) {
-		printk("[%d]   CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n", i,
-			__raw_readl(EXYNOS_ARM_CORE0_CONFIGURATION + i * 0x80),
-			__raw_readl(EXYNOS_ARM_CORE0_STATUS + i * 0x80),
-			__raw_readl(EXYNOS_ARM_CORE0_OPTION + i * 0x80));
-	}
-	pr_info(" **** EGL L2 CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n",
-			__raw_readl(EXYNOS_L2_CONFIGURATION(0)),
-			__raw_readl(EXYNOS_L2_STATUS(0)),
-			__raw_readl(EXYNOS_L2_OPTION(0)));
-	pr_info(" **** KFC L2 CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n",
-			__raw_readl(EXYNOS_L2_CONFIGURATION(1)),
-			__raw_readl(EXYNOS_L2_STATUS(1)),
-			__raw_readl(EXYNOS_L2_OPTION(1)));
-	pr_info(" **** CPUSEQ CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n",
-			__raw_readl(EXYNOS5433_EAGLE_CPUSEQ_CONFIGURATION),
-			__raw_readl(EXYNOS5433_EAGLE_CPUSEQ_STATUS),
-			__raw_readl(EXYNOS5433_EAGLE_CPUSEQ_OPTION));
-	pr_info(" **** CENTRL CONFIG : 0x%x  STATUS : 0x%x  OPTION : 0x%x\n",
-			__raw_readl(EXYNOS_CENTRAL_SEQ_CONFIGURATION),
-			__raw_readl(EXYNOS_CENTRAL_SEQ_CONFIGURATION + 0x4),
-			__raw_readl(EXYNOS_CENTRAL_SEQ_OPTION));
-	pr_info(" **** LOCAL BLOCK POWER ****\n");
-	EXYNOS5433_PRINT_PMU(GSCL);
-	EXYNOS5433_PRINT_PMU(CAM0);
-	EXYNOS5433_PRINT_PMU(CAM1);
-	EXYNOS5433_PRINT_PMU(MSCL);
-	EXYNOS5433_PRINT_PMU(G3D);
-	EXYNOS5433_PRINT_PMU(DISP);
-	EXYNOS5433_PRINT_PMU(AUD);
-	EXYNOS5433_PRINT_PMU(FSYS);
-	EXYNOS5433_PRINT_PMU(BUS2);
-	EXYNOS5433_PRINT_PMU(G2D);
-	EXYNOS5433_PRINT_PMU(ISP);
-	EXYNOS5433_PRINT_PMU(MFC);
-	EXYNOS5433_PRINT_PMU(HEVC);
-	pr_info(" -----------------------------------------------------------------------------------\n");
-}
-
 int __init exynos5433_pmu_init(void)
 {
 	unsigned int tmp;

@@ -330,55 +330,6 @@ DEFINE_PER_CPU(struct pt_regs *, ess_core_reg);
 DEFINE_PER_CPU(struct exynos_ss_mmu_reg *, ess_mmu_reg);
 DEFINE_PER_CPU(enum ess_cause_emerg_events, ess_cause_emerg);
 
-static void exynos_ss_save_mmu(struct exynos_ss_mmu_reg *mmu_reg)
-{
-#ifndef CONFIG_ARM64
-	asm("mrc    p15, 0, r1, c1, c0, 0\n\t"	/* SCTLR */
-	    "str r1, [%0]\n\t"
-	    "mrc    p15, 0, r1, c2, c0, 0\n\t"	/* TTBR0 */
-	    "str r1, [%0,#4]\n\t"
-	    "mrc    p15, 0, r1, c2, c0,1\n\t"	/* TTBR1 */
-	    "str r1, [%0,#8]\n\t"
-	    "mrc    p15, 0, r1, c2, c0,2\n\t"	/* TTBCR */
-	    "str r1, [%0,#12]\n\t"
-	    "mrc    p15, 0, r1, c3, c0,0\n\t"	/* DACR */
-	    "str r1, [%0,#16]\n\t"
-	    "mrc    p15, 0, r1, c5, c0,0\n\t"	/* DFSR */
-	    "str r1, [%0,#20]\n\t"
-	    "mrc    p15, 0, r1, c6, c0,0\n\t"	/* DFAR */
-	    "str r1, [%0,#24]\n\t"
-	    "mrc    p15, 0, r1, c5, c0,1\n\t"	/* IFSR */
-	    "str r1, [%0,#28]\n\t"
-	    "mrc    p15, 0, r1, c6, c0,2\n\t"	/* IFAR */
-	    "str r1, [%0,#32]\n\t"
-	    /* Don't populate DAFSR and RAFSR */
-	    "mrc    p15, 0, r1, c10, c2,0\n\t"	/* PMRRR */
-	    "str r1, [%0,#44]\n\t"
-	    "mrc    p15, 0, r1, c10, c2,1\n\t"	/* NMRRR */
-	    "str r1, [%0,#48]\n\t"
-	    "mrc    p15, 0, r1, c13, c0,0\n\t"	/* FCSEPID */
-	    "str r1, [%0,#52]\n\t"
-	    "mrc    p15, 0, r1, c13, c0,1\n\t"	/* CONTEXT */
-	    "str r1, [%0,#56]\n\t"
-	    "mrc    p15, 0, r1, c13, c0,2\n\t"	/* URWTPID */
-	    "str r1, [%0,#60]\n\t"
-	    "mrc    p15, 0, r1, c13, c0,3\n\t"	/* UROTPID */
-	    "str r1, [%0,#64]\n\t"
-	    "mrc    p15, 0, r1, c13, c0,4\n\t"	/* POTPIDR */
-	    "str r1, [%0,#68]\n\t" :		/* output */
-	    : "r"(mmu_reg)			/* input */
-	    : "%r1", "memory"			/* clobbered register */
-	);
-#endif
-}
-
-int exynos_ss_early_dump(void)
-{
-	/*  This function is for tracing registers more early */
-	return 0;
-}
-EXPORT_SYMBOL(exynos_ss_early_dump);
-
 int exynos_ss_dump(void)
 {
 #ifndef CONFIG_ARM64
@@ -419,21 +370,6 @@ int exynos_ss_save_reg(struct pt_regs *regs)
 	return 0;
 }
 EXPORT_SYMBOL(exynos_ss_save_reg);
-
-int exynos_ss_save_context(struct pt_regs *regs)
-{
-	unsigned long flags;
-	spin_lock_irqsave(&ess_lock, flags);
-	exynos_ss_save_mmu(per_cpu(ess_mmu_reg, smp_processor_id()));
-	exynos_ss_save_reg(regs);
-	exynos_ss_dump();
-	pr_emerg("exynos-snapshot: context saved(CPU:%d)\n",
-						smp_processor_id());
-	flush_cache_all();
-	spin_unlock_irqrestore(&ess_lock, flags);
-	return 0;
-}
-EXPORT_SYMBOL(exynos_ss_save_context);
 
 int exynos_ss_set_enable(const char *name, int en)
 {
@@ -573,7 +509,6 @@ static inline void exynos_ss_hook_logbuf(const char *buf, u64 ts_nsec, size_t si
 
 enum ess_cause_emerg_events {
 	CAUSE_INVALID_DUMP = 0x00000000,
-	CAUSE_KERNEL_PANIC = 0x00000001,
 	CAUSE_FORCE_DUMP   = 0x0000000D,
 	CAUSE_FORCE_REBOOT = 0x000000FF,
 };
@@ -583,7 +518,7 @@ static void exynos_ss_scratch_reg(unsigned int val)
 	__raw_writel(val, S5P_VA_SS_SCRATCH);
 }
 
-#if defined(CONFIG_EXYNOS_SNAPSHOT_FORCE_DUMP_MODE) || defined(CONFIG_EXYNOS_SNAPSHOT_PANIC_REBOOT)
+#if defined(CONFIG_EXYNOS_SNAPSHOT_FORCE_DUMP_MODE)
 static void exynos_ss_report_cause_emerg(enum ess_cause_emerg_events event)
 {
 	per_cpu(ess_cause_emerg, smp_processor_id()) = event;
@@ -603,28 +538,6 @@ static int exynos_ss_reboot_handler(struct notifier_block *nb,
 #else
 	pr_emerg("exynos-snapshot: normal reboot [%s]\n", __func__);
 	exynos_ss_scratch_reg(CAUSE_INVALID_DUMP);
-	exynos_ss_save_context(NULL);
-	flush_cache_all();
-#endif
-	return 0;
-}
-
-static int exynos_ss_panic_handler(struct notifier_block *nb,
-				   unsigned long l, void *buf)
-{
-#ifdef CONFIG_EXYNOS_SNAPSHOT_PANIC_REBOOT
-	unsigned long flags;
-	spin_lock_irqsave(&ess_lock, flags);
-	exynos_ss_report_cause_emerg(CAUSE_KERNEL_PANIC);
-#ifdef CONFIG_EXYNOS_CORESIGHT
-	memcpy(ess_log->core, exynos_cs_pc, sizeof(ess_log->core));
-#endif
-	pr_emerg("exynos-snapshot: panic - forced ramdump mode [%s]\n", __func__);
-	flush_cache_all();
-	arm_pm_restart(0, "reset");
-	spin_unlock_irqrestore(&ess_lock, flags);
-#else
-	pr_emerg("exynos-snapshot: panic [%s]\n", __func__);
 	flush_cache_all();
 #endif
 	return 0;
@@ -632,10 +545,6 @@ static int exynos_ss_panic_handler(struct notifier_block *nb,
 
 static struct notifier_block nb_reboot_block = {
 	.notifier_call = exynos_ss_reboot_handler
-};
-
-static struct notifier_block nb_panic_block = {
-	.notifier_call = exynos_ss_panic_handler,
 };
 
 static unsigned int __init exynos_ss_remap(unsigned int base, unsigned int size)
@@ -877,7 +786,6 @@ static int __init exynos_ss_init(void)
 		register_hook_logger(exynos_ss_hook_logger);
 #endif
 		register_reboot_notifier(&nb_reboot_block);
-		atomic_notifier_chain_register(&panic_notifier_list, &nb_panic_block);
 
 	} else
 		pr_err("exynos-snapshot: %s failed\n", __func__);

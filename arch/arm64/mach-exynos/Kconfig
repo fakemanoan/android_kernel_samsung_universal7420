@@ -89,12 +89,6 @@ config EXYNOS_ASV_MARGIN_TEST
 	default n
 	depends on EXYNOS_ASV
 
-config SKIP_HW_BREAKPOINT
-	bool "support skip hw breakpoint"
-	default n
-	help
-	  Support early param for T32 onchip breakpoint
-
 config CAL_SYS_PWRDOWN
 	bool "Enable CAL for system level power down"
 
@@ -343,36 +337,6 @@ config MSM_SYSMON_COMM
 	  provides an API that may be used for notifying subsystems within
 	  the SoC about other subsystems' power-up/down state-changes.
 
-config TIMA
-	bool "Enable TIMA(Trustzone based Integrity Measurement Archtecture feature"
-	default n
-
-config TIMA_LKMAUTH
-	bool "Enable LKM authentication by TIMA"
-	help
-	  TIMA authenticates loaded kernel modules. Disable it if you don't
-	  want TIMA enabled.
-
-config TIMA_RKP
-       default n
-       depends on TIMA
-       bool "Samsung KNOX realtime kernel protection"
-       help
-         this enables realtime kernel protection
-
-config RKP_KDP
-	bool "Protection for cred structure"
-	depends on TIMA_RKP
-	default n
-	help
-		Prevents unauthorized cred modification.
-
-config RKP_DMAP_PROT
-	bool "Page Double Mapping protection"
-	depends on (TIMA_RKP && RKP_KDP)
-	default n
-	help
-		Prevents unauthorized cred modification.
 config RKP_NS_PROT
 	bool "Protection for cred structure"
 	depends on (TIMA_RKP && RKP_KDP)

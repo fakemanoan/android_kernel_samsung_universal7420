@@ -323,12 +323,6 @@ config ISL29003
 	  This driver can also be built as a module.  If so, the module
 	  will be called isl29003.
 
-config KNOX_KAP
-       bool "Enable KNOX KAP mode"
-       default n
-       help 
-              Knox Active Protection mode
-
 config ISL29020
 	tristate "Intersil ISL29020 ambient light sensor"
 	depends on I2C
@@ -429,10 +423,6 @@ config TI_DAC7512
 
 	  This driver can also be built as a module. If so, the module
 	  will be called ti_dac7512.
-
-config UID_STAT
-	bool "UID based statistics tracking exported to /proc/uid_stat"
-	default n
 
 config VMWARE_BALLOON
 	tristate "VMware Balloon Driver"
@@ -551,12 +541,6 @@ config CHECK_SIMSLOT_COUNT
 config CHECK_GPIO_DETECT
 	tristate "Sub FPBC type, CA type"
 
-config TIMA_LOG
-	tristate "Support for dumping TIMA log"
-	depends on TIMA
-	default y
-	help
-		This option enables support for dumping TIMA log.
 
 config SEC_FPGA_ICE40XX
         tristate "this feature allows FPGA_ICE40XX"

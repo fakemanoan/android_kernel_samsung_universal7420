@@ -61,34 +61,30 @@ static int __init early_initrd(char *p)
 early_param("initrd", early_initrd);
 #endif
 
-#ifdef CONFIG_ZONE_DMA_ALLOW_CUSTOM_SIZE
-#ifndef CONFIG_ZONE_DMA_SIZE_MBYTES
-#define ZONE_DMA_SIZE_BYTES	((u32)-1)
-#else
-#define ZONE_DMA_SIZE_BYTES	((u32)((CONFIG_ZONE_DMA_SIZE_MBYTES << 20) - 1))
-#endif
-#endif
+/*
+ * Return the maximum physical address for ZONE_DMA (DMA_BIT_MASK(32)). It
+ * currently assumes that for memory starting above 4G, 32-bit devices will
+ * use a DMA offset.
+ */
+static phys_addr_t __init max_zone_dma_phys(void)
+{
+	phys_addr_t offset = memblock_start_of_DRAM() & GENMASK_ULL(63, 32);
+	return min(offset + (1ULL << 32), memblock_end_of_DRAM());
+}
 
 static void __init zone_sizes_init(unsigned long min, unsigned long max)
 {
 	struct memblock_region *reg;
 	unsigned long zone_size[MAX_NR_ZONES], zhole_size[MAX_NR_ZONES];
 	unsigned long max_dma = min;
-#ifdef CONFIG_ZONE_DMA
-	unsigned long max_dma_phys, dma_end;
-#endif
+
 	memset(zone_size, 0, sizeof(zone_size));
 
+	/* 4GB maximum for 32-bit only capable devices */
 #ifdef CONFIG_ZONE_DMA
-#ifdef CONFIG_ZONE_DMA_ALLOW_CUSTOM_SIZE
-	max_dma_phys = (unsigned long)dma_to_phys(NULL,
-			(min << PAGE_SHIFT) + ZONE_DMA_SIZE_BYTES + 1);
-#else
-	max_dma_phys = (unsigned long)dma_to_phys(NULL, DMA_BIT_MASK(32) + 1);
-#endif /* CONFIG_ZONE_DMA_ALLOW_CUSTOM_SIZE */
-	max_dma = max(min, min(max, max_dma_phys >> PAGE_SHIFT));
+	max_dma = PFN_DOWN(max_zone_dma_phys());
 	zone_size[ZONE_DMA] = max_dma - min;
-#endif /* CONFIG_ZONE_DMA */
+#endif
 	zone_size[ZONE_NORMAL] = max - max_dma;
 
 	memcpy(zhole_size, zone_size, sizeof(zhole_size));
@@ -102,7 +98,7 @@ static void __init zone_sizes_init(unsigned long min, unsigned long max)
 
 #ifdef CONFIG_ZONE_DMA
 		if (start < max_dma) {
-			dma_end = min(end, max_dma);
+			unsigned long dma_end = min(end, max_dma);
 			zhole_size[ZONE_DMA] -= dma_end - start;
 		}
 #endif
@@ -394,12 +390,6 @@ void free_initmem(void)
 {
 	poison_init_mem(__init_begin, __init_end - __init_begin);
 	free_initmem_default(0);
-#ifdef CONFIG_TIMA_RKP
-#ifdef CONFIG_KNOX_KAP
-	if (boot_mode_security)
-#endif
-		rkp_call(RKP_DEF_INIT, 0, 0, 0, 0, 0);
-#endif
 }
 
 #ifdef CONFIG_BLK_DEV_INITRD

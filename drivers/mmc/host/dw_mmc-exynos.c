@@ -223,7 +223,7 @@ void dw_mci_exynos_cfg_smu(struct dw_mci *host)
 	int ret, id;
 #endif
 
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT) || defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
+#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 	if (!((host->pdata->quirks & DW_MCI_QUIRK_USE_SMU) ||
 		(host->pdata->quirks & DW_MCI_QUIRK_BYPASS_SMU)))
 		return;
@@ -271,7 +271,7 @@ void dw_mci_exynos_smu_reset(struct dw_mci *host)
 
 	is_smu = (host->pdata->quirks & DW_MCI_QUIRK_BYPASS_SMU) ?
 				true : false;
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT) || defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
+#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 	is_smu = is_smu || ((host->pdata->quirks & DW_MCI_QUIRK_USE_SMU) ?
 				true : false);
 #endif
@@ -552,7 +552,7 @@ static void dw_mci_exynos_register_dump(struct dw_mci *host)
 
 	is_smu = (host->pdata->quirks & DW_MCI_QUIRK_BYPASS_SMU) ?
 				true : false;
-#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT) || defined(CONFIG_MMC_DW_FMP_ECRYPT_FS)
+#if defined(CONFIG_MMC_DW_FMP_DM_CRYPT)
 	is_smu = is_smu || ((host->pdata->quirks & DW_MCI_QUIRK_USE_SMU) ?
 				true : false);
 #endif

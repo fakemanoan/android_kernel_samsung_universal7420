@@ -52,7 +52,7 @@ machdirs := $(patsubst %,arch/arm64/mach-%/,$(machine-y))
 platdirs := $(patsubst %,arch/arm64/plat-%/,$(plat-y))
 KBUILD_CPPFLAGS += $(patsubst %, -I%include,$(machdirs) $(platdirs))
 
-# Defaul value
+# Default value
 head-y		:= arch/arm64/kernel/head.o
 
 # The byte offset of the kernel image in RAM from the start of RAM.

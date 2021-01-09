@@ -331,11 +331,6 @@ config EXYNOS_SNAPSHOT_HOOK_LOGGER
 	depends on EXYNOS_SNAPSHOT
 	default y
 
-config EXYNOS_SNAPSHOT_PANIC_REBOOT
-	bool "Enable forced reboot after panic for ramdump"
-	depends on EXYNOS_SNAPSHOT
-	default y
-
 config EXYNOS5_DYNAMIC_CPU_HOTPLUG
 	bool "Dynamic CPU Hotplug support"
 	depends on CPU_FREQ

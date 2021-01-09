@@ -57,9 +57,7 @@ extern void exynos_ss_printk(const char *fmt, ...);
 extern void exynos_ss_printkl(size_t msg, size_t val);
 extern int exynos_ss_set_enable(const char *name, int en);
 extern int exynos_ss_get_enable(const char *name);
-extern int exynos_ss_save_context(struct pt_regs *);
 extern int exynos_ss_save_reg(struct pt_regs *);
-extern int exynos_ss_early_dump(void);
 
 #ifdef CONFIG_EXYNOS_SNAPSHOT_IRQ_DISABLED
 extern void arch_local_irq_restore(unsigned long flags);
@@ -150,9 +148,7 @@ static inline void exynos_ss_softirq(unsigned int irq, void *fn, int irqs_disabl
 #define exynos_ss_softirq(a,b,c,d)	do { } while(0)
 #define exynos_ss_printk(...)		do { } while(0)
 #define exynos_ss_printkl(a,b)		do { } while(0)
-#define exynos_ss_save_context(a)	do { } while(0)
 #define exynos_ss_set_enable(a,b)	do { } while(0)
-#define exynos_ss_early_dump()		do { } while(0)
 #endif /* CONFIG_EXYNOS_SNAPSHOT */
 
 #endif

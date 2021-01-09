@@ -24,14 +24,8 @@ extern void exynos_ss_suspend(void *fn, void *dev, int en);
 extern void exynos_ss_irq(unsigned int irq, void *fn, int irqs_disabled, int en);
 extern int exynos_ss_set_enable(const char *name, int en);
 extern int exynos_ss_get_enable(const char *name);
-extern int exynos_ss_save_context(void *regs);
 extern int exynos_ss_save_reg(void *regs);
-extern int exynos_ss_dump_panic(void);
-extern int exynos_ss_prepare_panic(void);
-extern int exynos_ss_post_panic(void);
 extern int exynos_ss_post_reboot(void);
-extern int exynos_ss_set_hardlockup(int);
-extern int exynos_ss_get_hardlockup(void);
 extern unsigned int exynos_ss_get_item_size(char*);
 extern unsigned int exynos_ss_get_item_paddr(char*);
 
@@ -123,15 +117,9 @@ extern int exynos_ss_hook_pmsg(char *buffer, size_t count);
 #define exynos_ss_hook_pmsg(a,b)	do { } while(0)
 #define exynos_ss_printk(...)		do { } while(0)
 #define exynos_ss_printkl(a,b)		do { } while(0)
-#define exynos_ss_save_context(a)	do { } while(0)
 #define exynos_ss_set_enable(a,b)	do { } while(0)
 #define exynos_ss_get_enable(a)		do { } while(0)
-#define exynos_ss_dump_panic()		do { } while(0)
-#define exynos_ss_prepare_panic()	do { } while(0)
-#define exynos_ss_post_panic()		do { } while(0)
 #define exynos_ss_post_reboot()		do { } while(0)
-#define exynos_ss_set_hardlockup(a)	do { } while(0)
-#define exynos_ss_get_hardlockup()	do { } while(0)
 #define exynos_ss_get_item_size(a)	do { } while(0)
 #define exynos_ss_get_item_paddr(a)	do { } while(0)
 #endif /* CONFIG_EXYNOS_SNAPSHOT */

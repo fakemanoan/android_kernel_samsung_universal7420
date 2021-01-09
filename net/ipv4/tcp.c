@@ -268,7 +268,6 @@
 #include <linux/crypto.h>
 #include <linux/time.h>
 #include <linux/slab.h>
-#include <linux/uid_stat.h>
 
 #include <net/icmp.h>
 #include <net/inet_common.h>
@@ -839,15 +838,8 @@ unsigned int tcp_xmit_size_goal(struct sock *sk, u32 mss_now, int large_allowed)
 				 sysctl_tcp_min_tso_segs * mss_now);
 #endif
 
-		/* TSQ : try to have two TSO segments in flight */
-
-#ifdef CONFIG_MPTCP
-		xmit_size_goal = min_t(u32, xmit_size_goal,
-				       sysctl_tcp_limit_output_bytes >> 1);
-#else
 		xmit_size_goal = min_t(u32, gso_size,
 				       sk->sk_gso_max_size - 1 - hlen);
-#endif
 
 		xmit_size_goal = tcp_bound_to_half_wnd(tp, xmit_size_goal);
 
@@ -1349,9 +1341,6 @@ out:
 		tcp_push(sk, flags, mss_now, tp->nonagle);
 out_nopush:
 	release_sock(sk);
-
-	if (copied + copied_syn)
-		uid_stat_tcp_snd(current_uid(), copied + copied_syn);
 	return copied + copied_syn;
 
 do_fault:
@@ -1664,7 +1653,6 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
 #else
 		tcp_cleanup_rbuf(sk, copied);
 #endif
-		uid_stat_tcp_rcv(current_uid(), copied);
 	}
 	return copied;
 }
@@ -2089,9 +2077,6 @@ skip_copy:
 #endif
 
 	release_sock(sk);
-
-	if (copied > 0)
-		uid_stat_tcp_rcv(current_uid(), copied);
 	return copied;
 
 out:
@@ -2100,8 +2085,6 @@ out:
 
 recv_urg:
 	err = tcp_recv_urg(sk, msg, len, flags);
-	if (err > 0)
-		uid_stat_tcp_rcv(current_uid(), err);
 	goto out;
 
 recv_sndq:

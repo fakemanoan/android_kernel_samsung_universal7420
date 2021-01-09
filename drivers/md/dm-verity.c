@@ -22,11 +22,6 @@
 
 #include <linux/ctype.h>
 
-#if defined(CONFIG_TZ_ICCC)
-#include <linux/smc.h>
-#define SMC_CMD_DMV_WRITE_STATUS (0x83000014)
-#endif
-
 #define DM_MSG_PREFIX			"verity"
 
 #define DM_VERITY_IO_VEC_INLINE		16
@@ -35,18 +30,6 @@
 
 #define DM_VERITY_MAX_LEVELS		63
 
-#ifdef VERIFY_META_ONLY
-extern struct rb_root *ext4_system_zone_root(struct super_block *sb);
-
-struct rb_root *system_blks;
-
-struct ext4_system_zone {
-    struct rb_node  node;
-    unsigned long long  start_blk;
-    unsigned int    count;
-};
-int start_meta;
-#endif
 
 #define SEC_HEX_DEBUG
 
@@ -484,9 +467,6 @@ test_block_hash:
 				kunmap_atomic(page);
 #endif
 				v->hash_failed = 1;
-#if defined(CONFIG_TZ_ICCC)
-				printk(KERN_ERR "ICCC smc ret = %d \n",exynos_smc(SMC_CMD_DMV_WRITE_STATUS, 1, 0, 0));
-#endif
 				return -EIO;
 			}
 		}
@@ -595,28 +575,6 @@ static void verity_submit_prefetch(struct dm_verity *v, struct dm_verity_io *io)
 	queue_work(v->verify_wq, &pw->work);
 }
 
-#ifdef VERIFY_META_ONLY
-static bool is_metablock(unsigned long long n_block)
-{
-    struct rb_node *node;
-    struct ext4_system_zone *entry;
-    bool result = false;
-
-    node = rb_first(system_blks);
-	if(node == NULL)
-		return true;
-    while (node) {
-        entry = rb_entry(node, struct ext4_system_zone, node);
-        if (n_block >= entry->start_blk && n_block <= entry->start_blk + entry->count - 1 ) {
-            result = true;
-            return result;
-        }
-        node = rb_next(node);
-    }
-    return result;
-}
-#endif
-
 /*
  * Bio map function. It allocates dm_verity_io structure and bio vector and
  * fills them. Then it issues prefetches and the I/O.
@@ -628,13 +586,6 @@ static int verity_map(struct dm_target *ti, struct bio *bio)
 #ifdef DMV_ALTA
     bool skip = true;
     sector_t bitpos, nblks;
-#endif
-#ifdef VERIFY_META_ONLY
-	if (!start_meta && bio->bi_bdev->bd_super) {
-		system_blks = ext4_system_zone_root(bio->bi_bdev->bd_super);
-		DMERR_LIMIT("Successfully Get the system block information");
-		start_meta = 1;
-	}
 #endif
 
 	bio->bi_bdev = v->data_dev->bdev;
@@ -684,14 +635,6 @@ static int verity_map(struct dm_target *ti, struct bio *bio)
         goto skip_verity;
     }
 #endif
-#ifdef VERITY_PERF
-	goto skip_verity;
-#endif
-
-#ifdef VERIFY_META_ONLY
-	if (start_meta && !is_metablock(bio->bi_sector >> (v->data_dev_block_bits - SECTOR_SHIFT)))
-		goto skip_verity;
-#endif		
 
 	io = dm_per_bio_data(bio, ti->per_bio_data_size);
 	io->v = v;
@@ -711,14 +654,7 @@ static int verity_map(struct dm_target *ti, struct bio *bio)
 	       io->io_vec_size * sizeof(struct bio_vec));
 
 	verity_submit_prefetch(v, io);
-
 #ifdef DMV_ALTA
-skip_verity:
-#endif
-#ifdef VERITY_PERF
-skip_verity:
-#endif
-#ifdef VERIFY_META_ONLY
 skip_verity:
 #endif
 	generic_make_request(bio);

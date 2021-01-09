@@ -288,15 +288,6 @@ void __show_regs(struct pt_regs *regs)
 		top_reg = 29;
 
 	}
-	if (!user_mode(regs)) {
-		exynos_ss_save_context(regs);
-		/*
-		 *  If you want to see more kernel events after panic,
-		 *  you should modify exynos_ss_set_enable's function 2nd parameter
-		 *  to true.
-		 */
-		exynos_ss_set_enable("log_kevents", false);
-	}
 
 	show_regs_print_info(KERN_DEFAULT);
 	print_symbol("PC is at %s\n", instruction_pointer(regs));

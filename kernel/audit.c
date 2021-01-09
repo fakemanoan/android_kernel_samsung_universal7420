@@ -67,12 +67,6 @@
 
 #include "audit.h"
 
-// [ SEC_SELINUX_PORTING_EXYNOS
-#ifdef CONFIG_SEC_AVC_LOG
-#include <linux/sec_debug.h>
-#endif
-// ] SEC_SELINUX_PORTING_EXYNOS
-
 /* No auditing will take place until audit_initialized == AUDIT_INITIALIZED.
  * (Initialization happens after skb_init is called.) */
 #define AUDIT_DISABLED		-1
@@ -377,17 +371,11 @@ static void audit_printk_skb(struct sk_buff *skb)
 	struct nlmsghdr *nlh = nlmsg_hdr(skb);
 	char *data = nlmsg_data(nlh);
 
-	if (nlh->nlmsg_type != AUDIT_EOE && nlh->nlmsg_type != AUDIT_NETFILTER_CFG) {
-// [ SEC_SELINUX_PORTING_EXYNOS
-#ifdef CONFIG_SEC_AVC_LOG
-		sec_debug_avc_log("type=%d %s\n", nlh->nlmsg_type, data);
-#else
+	if (nlh->nlmsg_type != AUDIT_EOE) {
 		if (printk_ratelimit())
 			printk(KERN_NOTICE "type=%d %s\n", nlh->nlmsg_type, data);
 		else
 			audit_log_lost("printk limit exceeded\n");
-#endif
-// ] SEC_SELINUX_PORTING_EXYNOS
 	}
 
 	audit_hold_skb(skb);
@@ -419,7 +407,6 @@ static void kauditd_send_skb(struct sk_buff *skb)
 // ] SEC_SELINUX_PORTING_EXYNOS
 		/* drop the extra reference if sent ok */
 		consume_skb(skb);
-	}
 }
 
 /*

@@ -62,4 +62,3 @@ obj-$(CONFIG_ZCACHE)		+= zcache/
 obj-$(CONFIG_GOLDFISH)		+= goldfish/
 obj-$(CONFIG_USB_DWC2)		+= dwc2/
 obj-$(CONFIG_SEC_EXT)		+= samsung/
-obj-$(CONFIG_VNSWAP)		+= vnswap/

@@ -875,7 +875,7 @@ static void exynos_ufs_config_smu(struct exynos_ufs *ufs)
 
 	reg = ufsp_readl(ufs, UFSPRSECURITY);
 	ufsp_writel(ufs, reg | NSSMU, UFSPRSECURITY);
-#if defined(CONFIG_UFS_FMP_DM_CRYPT) || defined(CONFIG_UFS_FMP_ECRYPT_FS)
+#if defined(CONFIG_UFS_FMP_DM_CRYPT)
 	ufsp_writel(ufs, reg | PROTBYTZPC | DESCTYPE(3), UFSPRSECURITY);
 #endif
 	ufsp_writel(ufs, 0x0, UFSPSBEGIN0);
