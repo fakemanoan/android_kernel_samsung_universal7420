@@ -506,7 +506,7 @@ void stop_net_ifaces(struct link_device *ld)
 
 	spin_lock_irqsave(&ld->netif_lock, flags);
 
-	if (atomic_read(&ld->netif_stopped) > 0)
+	if (!(atomic_read(&ld->netif_stopped) > 0))
 		goto exit;
 
 	iod = link_get_iod_with_channel(ld, SIPC_CH_ID_PDP_0);

@@ -960,7 +960,7 @@ static void bts_add_scen(enum exynos_bts_scenario scen, struct bts_info *bts)
 						bts_set_ip_table(bts->top_scen, bts);
 
 				} else {
-					for (prev = bts->top_scen; prev > scen; prev = bts->table[prev].prev_scen)
+					for (prev = bts->top_scen; prev >= scen; prev = bts->table[prev].prev_scen)
 						next = prev;
 
 					bts->table[scen].prev_scen = bts->table[next].prev_scen;
