@@ -1643,7 +1643,7 @@ static void __jbd2_journal_temp_unlink_buffer(struct journal_head *jh)
 		if (transaction->t_journal->j_flags & JBD2_JOURNAL_TAG)
 			set_buffer_jmeta(bh);
 #endif
-		mark_buffer_dirty_sync(bh); /* Expose it to the VM */
+		mark_buffer_dirty(bh); /* Expose it to the VM */
 }
 }
 
