@@ -697,6 +697,7 @@ static DEFINE_PCI_DEVICE_TABLE(pch_ieee1588_pcidev_id) = {
 	 },
 	{0}
 };
+MODULE_DEVICE_TABLE(pci, pch_ieee1588_pcidev_id);
 
 static struct pci_driver pch_driver = {
 	.name = KBUILD_MODNAME,
