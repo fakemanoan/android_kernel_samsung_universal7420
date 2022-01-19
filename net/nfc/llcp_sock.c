@@ -790,6 +790,11 @@ static int llcp_sock_sendmsg(struct kiocb *iocb, struct socket *sock,
 
 	lock_sock(sk);
 
+	if (!llcp_sock->local) {
+		release_sock(sk);
+		return -ENODEV;
+	}
+
 	if (sk->sk_type == SOCK_DGRAM) {
 		struct sockaddr_nfc_llcp *addr =
 			(struct sockaddr_nfc_llcp *)msg->msg_name;
