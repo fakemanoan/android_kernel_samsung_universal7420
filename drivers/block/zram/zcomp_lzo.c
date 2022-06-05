@@ -17,6 +17,8 @@
 
 static void *lzo_create(gfp_t flags)
 {
+	void *ret;
+
 	ret = kmalloc(LZO1X_MEM_COMPRESS, flags);
 	if (!ret)
 		ret = __vmalloc(LZO1X_MEM_COMPRESS,
