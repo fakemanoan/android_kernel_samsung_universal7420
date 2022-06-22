@@ -2733,7 +2733,7 @@ static int __init touchkey_init(void)
 	int ret;
 #endif
 	if (variant_edge == IS_EDGE) {
-		return;
+		return 0;
 	}
 	i2c_add_driver(&touchkey_i2c_driver);
 
