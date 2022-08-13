@@ -179,7 +179,6 @@ static void ecryptfs_evict_inode(struct inode *inode)
 #else
 	truncate_inode_pages_final(&inode->i_data);
 #endif
->>>>>>> adead8a... mm + fs: store shadow entries in page cache
 	clear_inode(inode);
 	iput(ecryptfs_inode_to_lower(inode));
 }
