@@ -1131,8 +1131,6 @@ sleep:
 	return 0;
 
 failed_out:
-	exynos_ss_set_hardlockup(1);
-	panic("%s: failed dynamic hotplug (exe_cmd %d)\n", __func__, exe_cmd);
 
 	return ret;
 }
