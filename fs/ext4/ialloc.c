@@ -323,7 +323,7 @@ out:
 					   count);
 		}
 		set_bit(EXT4_GROUP_INFO_IBITMAP_CORRUPT_BIT, &grp->bb_state);
-	}
+	
 
 error_return:
 	brelse(bitmap_bh);
