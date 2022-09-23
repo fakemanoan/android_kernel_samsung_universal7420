@@ -2183,7 +2183,7 @@ static void remove_tasks_in_empty_cpuset(struct cpuset *cs)
  */
 static void cpuset_hotplug_update_tasks(struct cpuset *cs)
 {
-	static cpumask_t diff, new_allowed;
+	static cpumask_t off_cpus;
 	static nodemask_t off_mems;
 	bool is_empty;
 	bool sane = cgroup_sane_behavior(cs->css.cgroup);
@@ -2193,8 +2193,7 @@ retry:
 
 	mutex_lock(&cpuset_mutex);
 
-	cpumask_and(&new_allowed, cs->cpus_requested, top_cpuset.cpus_allowed);
-	cpumask_xor(&diff, &new_allowed, cs->cpus_allowed);
+	cpumask_and(&off_cpus, cs->cpus_requested, top_cpuset.cpus_allowed);
 
 	/*
 	 * We have raced with task attaching. We wait until attaching
