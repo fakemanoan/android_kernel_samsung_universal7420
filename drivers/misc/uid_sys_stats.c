@@ -329,7 +329,7 @@ static struct uid_entry *find_or_register_uid(uid_t uid)
 
 static int uid_cputime_show(struct seq_file *m, void *v)
 {
-	struct uid_entry *uid_entry = NULL;
+	struct uid_entry *uid_entry;
 	struct task_struct *task, *temp;
 	struct user_namespace *user_ns = current_user_ns();
 	cputime_t utime;
@@ -347,8 +347,7 @@ static int uid_cputime_show(struct seq_file *m, void *v)
 	read_lock(&tasklist_lock);
 	do_each_thread(temp, task) {
 		uid = from_kuid_munged(user_ns, task_uid(task));
-		if (!uid_entry || uid_entry->uid != uid)
-			uid_entry = find_or_register_uid(uid);
+		uid_entry = find_or_register_uid(uid);
 		if (!uid_entry) {
 			read_unlock(&tasklist_lock);
 			rt_mutex_unlock(&uid_lock);
@@ -480,7 +479,7 @@ static void add_uid_io_stats(struct uid_entry *uid_entry,
 
 static void update_io_stats_all_locked(void)
 {
-	struct uid_entry *uid_entry = NULL;
+	struct uid_entry *uid_entry;
 	struct task_struct *task, *temp;
 	struct user_namespace *user_ns = current_user_ns();
 	unsigned long bkt;
@@ -495,8 +494,7 @@ static void update_io_stats_all_locked(void)
 	rcu_read_lock();
 	do_each_thread(temp, task) {
 		uid = from_kuid_munged(user_ns, task_uid(task));
-		if (!uid_entry || uid_entry->uid != uid)
-			uid_entry = find_or_register_uid(uid);
+		uid_entry = find_or_register_uid(uid);
 		if (!uid_entry)
 			continue;
 		add_uid_io_stats(uid_entry, task, UID_STATE_TOTAL_CURR);
