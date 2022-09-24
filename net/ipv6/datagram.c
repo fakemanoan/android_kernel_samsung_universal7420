@@ -896,11 +896,10 @@ EXPORT_SYMBOL_GPL(ip6_datagram_send_ctl);
 void ip6_dgram_sock_seq_show(struct seq_file *seq, struct sock *sp,
 			     __u16 srcp, __u16 destp, int bucket)
 {
-	struct ipv6_pinfo *np = inet6_sk(sp);
 	const struct in6_addr *dest, *src;
 
-	dest  = &np->daddr;
-	src   = &np->rcv_saddr;
+	dest  = &sp->sk_v6_daddr;
+	src   = &sp->sk_v6_rcv_saddr;
 	seq_printf(seq,
 		   "%5d: %08X%08X%08X%08X:%04X %08X%08X%08X%08X:%04X "
 		   "%02X %08X:%08X %02X:%08lX %08X %5u %8d %lu %d %pK %d\n",
