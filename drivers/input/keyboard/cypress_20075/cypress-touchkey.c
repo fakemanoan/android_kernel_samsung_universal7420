@@ -61,6 +61,11 @@ u8 *tk_fw_name = FW_PATH;
 u8 module_divider[] = {0, 0xff};
 #endif
 
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif
+
 extern unsigned int lcdtype;
 static unsigned int octa_color = 0x0;
 
@@ -2447,6 +2452,12 @@ static struct touchkey_platform_data *cypress_parse_dt(struct i2c_client *client
 	return pdata;
 }
 #endif
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+	unsigned long event, void *data);
+#endif
+
 static int i2c_touchkey_probe(struct i2c_client *client,
 	const struct i2c_device_id *id)
 {
@@ -2662,6 +2673,12 @@ static int i2c_touchkey_probe(struct i2c_client *client,
 
 	return 0;
 
+#ifdef CONFIG_FB
+	info->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&info->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
+    
 #if defined(TK_HAS_FIRMWARE_UPDATE)
 err_firmware_update:
 	disable_irq(tkey_i2c->irq);
@@ -2681,11 +2698,43 @@ err_register_device:
 	mutex_destroy(&tkey_i2c->i2c_lock);
 	mutex_destroy(&tkey_i2c->lock);
 	input_free_device(input_dev);
+#ifdef CONFIG_FB
+	fb_unregister_client(&info->fb_notif);
+#endif	
 err_allocate_input_device:
 	gpio_free(pdata->gpio_int);
 	kfree(tkey_i2c);
 	return ret;
 }
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct abov_tk_info *tc_info = container_of(self, struct abov_tk_info, fb_notif);
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+			abov_tk_resume(&tc_info->client->dev);
+			break;
+		case FB_BLANK_POWERDOWN:
+			abov_tk_suspend(&tc_info->client->dev);
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
+
+	return 0;
+}
+#endif
 
 void touchkey_shutdown(struct i2c_client *client)
 {

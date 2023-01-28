@@ -254,6 +254,9 @@ struct touchkey_i2c {
 	struct mode_change_data mc_data;
 	int ic_mode;
 	int tsk_enable_glove_mode;
+    #ifdef CONFIG_FB
+	struct notifier_block fb_notif;
+#endif
 };
 
 extern struct class *sec_class;
