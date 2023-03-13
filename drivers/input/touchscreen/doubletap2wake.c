@@ -37,11 +37,11 @@
 #include <uapi/linux/fb.h>
 #include <asm-generic/cputime.h>
 
+#include "doubletap2wake.h"
+
 /*
  * global tunables
  */
-// stores the current DT2W-state set by the user
-static bool dt2w_enabled = false;
 
 // indicates if the DT2W-driver should use own wakelocks to
 // ensure the availability of DT2W

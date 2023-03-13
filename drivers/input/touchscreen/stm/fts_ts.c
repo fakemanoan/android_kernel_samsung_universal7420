@@ -71,6 +71,7 @@
 #endif
 #include <linux/input/mt.h>
 #include "fts_ts.h"
+#include "../doubletap2wake.h"
 
 #ifdef CONFIG_FB
 #include <linux/notifier.h>
@@ -2815,8 +2816,10 @@ static int fb_notifier_callback(struct notifier_block *self,
 		        fts_input_open(tc_data->input_dev);
 			break;
 		case FB_BLANK_POWERDOWN:
-		        fts_input_close(tc_data->input_dev);
-			break;
+			if(!dt2w_enabled){
+				fts_input_close(tc_data->input_dev);
+				break;
+			}
 		default:
 			/* Don't handle what we don't understand */
 			break;
